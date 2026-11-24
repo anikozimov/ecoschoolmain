@@ -191,7 +191,7 @@ export default function AdminDashboard() {
       href: "/admin/recycling",
       icon: "♻️",
       title: "Recycling",
-      text: "vazn tasdiqlash",
+      text: "sinflarga kiritish",
       count: counts.recycling,
       bg: "from-[#d9a441] to-[#b9802a]",
       glow: "shadow-[0_20px_40px_-18px_rgb(185_128_42/0.8)]",

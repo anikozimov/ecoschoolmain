@@ -18,10 +18,10 @@ type Student = {
   is_owner?: boolean | null;
 };
 
-const ROLES = ["student", "mentor", "admin"] as const;
+const ROLES = ["student", "admin"] as const;
 const ROLE_TEXT: Record<string, string> = {
   student: "Oddiy foydalanuvchi: topshiriq yuboradi, ball to‘playdi.",
-  mentor: "Challenge, recycling va tadqiqotlarni tekshirib, ball beradi. Saytni boshqara olmaydi.",
+  mentor: "Topshiriqlarni tekshiradi (eski rol).",
   admin: "Hamma narsani boshqaradi: topshiriqlar, sahifalar, maktablar, foydalanuvchilar.",
 };
 
@@ -77,7 +77,6 @@ export default function AdminStudentsPage() {
 
   const totalPoints = rows.reduce((s, r) => s + (r.points ?? 0), 0);
   const admins = rows.filter((r) => r.role === "admin").length;
-  const mentors = rows.filter((r) => r.role === "mentor").length;
 
   async function openEdit(s: Student) {
     setEditing(s);
@@ -167,7 +166,7 @@ export default function AdminStudentsPage() {
     <>
       <AdminTitle
         title="Foydalanuvchilar"
-        text="O‘quvchilar, mentorlar va adminlar. Ism, sinf, rol va parolni shu yerda boshqarasiz."
+        text="O‘quvchilar va adminlar. Ism, sinf, rol va parolni shu yerda boshqarasiz."
         action={
           <div className="flex gap-3">
             <div className="card px-4 py-3">
@@ -187,7 +186,6 @@ export default function AdminStudentsPage() {
         <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="input py-2.5 md:max-w-[180px]" aria-label="Rol">
           <option value="all">Barcha rollar</option>
           <option value="student">O‘quvchilar</option>
-          <option value="mentor">Mentorlar</option>
           <option value="admin">Adminlar</option>
         </select>
         <select value={cls} onChange={(e) => setCls(e.target.value)} className="input py-2.5 md:max-w-[180px]" aria-label="Sinf">
@@ -229,7 +227,7 @@ export default function AdminStudentsPage() {
                     ) : s.role === "admin" ? (
                       <span className="chip ml-2 bg-glow align-middle text-forest-950">Admin</span>
                     ) : s.role === "mentor" ? (
-                      <span className="chip ml-2 bg-sky-300 align-middle text-forest-950">Mentor</span>
+                      <span className="chip ml-2 bg-sky-300 align-middle text-forest-950">Tekshiruvchi</span>
                     ) : null}
                   </p>
                   <p className="truncate text-xs text-muted">
@@ -245,7 +243,7 @@ export default function AdminStudentsPage() {
         </div>
       )}
       <p className="mt-3 text-xs text-muted">
-        Adminlar: {admins} · Mentorlar: {mentors}. Ballar faqat tasdiqlangan topshiriqlar orqali o‘zgaradi.
+        Adminlar: {admins}. Ballar faqat tasdiqlangan topshiriqlar orqali o‘zgaradi.
         {!isOwner && " Adminlarni faqat bosh admin tayinlaydi."}
       </p>
 

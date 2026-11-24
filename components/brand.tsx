@@ -5,6 +5,7 @@ export const NAV = [
   { href: "/leaderboard", label: "Reyting", icon: "🏆" },
   { href: "/impact", label: "Natijalar", icon: "🌍" },
   { href: "/calendar", label: "Taqvim", icon: "📅" },
+  { href: "/mentors", label: "Mentorlar", icon: "🎓" },
 ];
 
 export const TELEGRAM_URL = "https://t.me/ecofutureandijan";

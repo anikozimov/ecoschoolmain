@@ -1,166 +1,65 @@
 "use client";
 
-import { confetti, Reveal } from "@/components/effects";
+import { Reveal } from "@/components/effects";
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import type { FormEvent } from "react";
 import { createClient } from "@/lib/supabase";
-import { ALLOWED_IMAGE_TYPES, formatDate, formatNumber, useSession } from "@/lib/session";
+import { formatDate, formatNumber, useSession } from "@/lib/session";
 import { useSiteContent } from "@/lib/content";
-import { Alert, EmptyState, LoginRequired, PageHero, Skeleton, Spinner, StatusBadge } from "@/components/ui";
+import { Alert, EmptyState, LoginRequired, PageHero, Skeleton } from "@/components/ui";
 
-type RecyclingSubmission = {
-  id: number;
-  material: "paper" | "plastic";
-  amount_kg: number;
-  verified_amount_kg?: number | null;
-  status: "pending" | "approved" | "rejected";
-  awarded_points: number;
-  submitted_at: string;
-};
+type ClassRow = { class_name: string; paper_kg: number; plastic_kg: number; total_kg: number; points: number; entries: number };
+type Entry = { id: number; class_name: string; material: "paper" | "plastic"; amount_kg: number; verified_amount_kg: number | null; awarded_points: number; submitted_at: string };
 
-const MAX_MB = 5;
 const POINTS_PER_KG = 25;
+const MEDALS = ["🥇", "🥈", "🥉"];
 
 const materials = {
-  paper: { icon: "📄", label: "Qog‘oz", text: "Daftar, gazeta, karton", tint: "bg-sand-100", ring: "ring-sand-500" },
-  plastic: { icon: "🧴", label: "Plastik", text: "Butilka, idish, paket", tint: "bg-sky-100", ring: "ring-sky-500" },
+  paper: { icon: "📄", label: "Qog‘oz", tint: "bg-sand-100" },
+  plastic: { icon: "🧴", label: "Plastik", tint: "bg-sky-100" },
 } as const;
 
 export default function RecyclingPage() {
-  const { user, loading: sessionLoading, isStaff } = useSession();
+  const { user, profile, loading: sessionLoading, isAdmin } = useSession();
   const content = useSiteContent("recycling");
   const [supabase] = useState(() => createClient());
-  const [material, setMaterial] = useState<"paper" | "plastic">("paper");
-  const [amount, setAmount] = useState("");
-  const [proofFile, setProofFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [submissions, setSubmissions] = useState<RecyclingSubmission[]>([]);
+  const [rows, setRows] = useState<ClassRow[]>([]);
+  const [recent, setRecent] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+  const [error, setError] = useState("");
 
-  const loadSubmissions = useCallback(async () => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from("recycling_submissions")
-      .select("id, material, amount_kg, status, awarded_points, submitted_at")
-      .eq("student_id", user.id)
-      .order("submitted_at", { ascending: false });
-    if (error) {
-      console.error(error);
-      setMessage({ text: "Topshiruvlar tarixini yuklab bo‘lmadi.", error: true });
+  const load = useCallback(async () => {
+    const [sRes, eRes] = await Promise.all([
+      supabase.rpc("get_class_recycling"),
+      supabase
+        .from("recycling_submissions")
+        .select("id, class_name, material, amount_kg, verified_amount_kg, awarded_points, submitted_at")
+        .is("student_id", null)
+        .eq("status", "approved")
+        .order("submitted_at", { ascending: false })
+        .limit(8),
+    ]);
+    if (sRes.error) {
+      console.error(sRes.error);
+      setError("Natijalarni yuklab bo‘lmadi. Birozdan keyin qayta urinib ko‘ring.");
     } else {
-      setSubmissions((data as RecyclingSubmission[]) || []);
+      setRows(((sRes.data as ClassRow[]) || []).map((r) => ({ ...r, total_kg: Number(r.total_kg), paper_kg: Number(r.paper_kg), plastic_kg: Number(r.plastic_kg) })));
     }
+    if (!eRes.error) setRecent((eRes.data as Entry[]) || []);
     setLoading(false);
-  }, [supabase, user]);
+  }, [supabase]);
 
   useEffect(() => {
     if (sessionLoading) return;
     if (!user) setLoading(false);
-    else loadSubmissions();
-  }, [sessionLoading, user, loadSubmissions]);
+    else load();
+  }, [sessionLoading, user, load]);
 
-  useEffect(() => {
-    if (!proofFile) return setPreview(null);
-    const url = URL.createObjectURL(proofFile);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [proofFile]);
-
-  function pickFile(file: File | null) {
-    setMessage(null);
-    if (!file) return setProofFile(null);
-    if (!ALLOWED_IMAGE_TYPES[file.type]) {
-      setMessage({ text: "Faqat JPG, PNG yoki WEBP formatidagi rasm yuklang.", error: true });
-      return;
-    }
-    if (file.size > MAX_MB * 1024 * 1024) {
-      setMessage({ text: `Rasm hajmi ${MAX_MB} MB dan oshmasligi kerak.`, error: true });
-      return;
-    }
-    setProofFile(file);
-  }
-
-  async function submitRecycling(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setMessage(null);
-    if (!user) return;
-
-    const kg = Number(amount);
-    if (!Number.isFinite(kg) || kg <= 0 || kg > 500) {
-      setMessage({ text: "Iltimos, 0.01 dan 500 kg gacha bo‘lgan to‘g‘ri vazn kiriting.", error: true });
-      return;
-    }
-    if (!proofFile) {
-      setMessage({ text: "Iltimos, tarozi rasmini yuklang.", error: true });
-      return;
-    }
-    const ext = ALLOWED_IMAGE_TYPES[proofFile.type];
-    if (!ext) {
-      setMessage({ text: "Rasm formati qo‘llab-quvvatlanmaydi.", error: true });
-      return;
-    }
-
-    setSending(true);
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("school_id")
-        .eq("id", user.id)
-        .single();
-
-      if (profileError || !profile?.school_id) {
-        setMessage({ text: "Profilingizga maktab biriktirilmagan. Administratorga murojaat qiling.", error: true });
-        return;
-      }
-
-      // Kengaytma foydalanuvchi fayl nomidan emas, MIME turidan olinadi
-      const filePath = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("recycling-proofs")
-        .upload(filePath, proofFile, { cacheControl: "3600", upsert: false, contentType: proofFile.type });
-
-      if (uploadError) {
-        console.error(uploadError);
-        setMessage({ text: "Rasmni yuklab bo‘lmadi. Qayta urinib ko‘ring.", error: true });
-        return;
-      }
-
-      const { error: insertError } = await supabase.from("recycling_submissions").insert({
-        school_id: profile.school_id,
-        student_id: user.id,
-        material,
-        amount_kg: Math.round(kg * 100) / 100,
-        proof_image: filePath,
-      });
-
-      if (insertError) {
-        await supabase.storage.from("recycling-proofs").remove([filePath]);
-        console.error(insertError);
-        setMessage({ text: "Topshiruvni yuborib bo‘lmadi. Qayta urinib ko‘ring.", error: true });
-        return;
-      }
-
-      confetti();
-      setMessage({ text: "Topshiruvingiz yuborildi! Eco Team vaznni tekshirib, ballarni qo‘shadi. 🌱", error: false });
-      setAmount("");
-      setProofFile(null);
-      await loadSubmissions();
-    } catch (err) {
-      console.error(err);
-      setMessage({ text: "Kutilmagan xatolik yuz berdi. Qayta urinib ko‘ring.", error: true });
-    } finally {
-      setSending(false);
-    }
-  }
-
-  const approved = submissions.filter((s) => s.status === "approved");
-  const totalKg = approved.reduce((sum, s) => sum + Number(s.amount_kg || 0), 0);
-  const totalPoints = approved.reduce((sum, s) => sum + Number(s.awarded_points || 0), 0);
-  const estimate = Math.max(0, Math.round((Number(amount) || 0) * POINTS_PER_KG));
+  const totalKg = rows.reduce((s, r) => s + r.total_kg, 0);
+  const myClass = profile?.class_name?.toUpperCase() || "";
+  const myRank = rows.findIndex((r) => r.class_name === myClass);
+  const maxKg = Math.max(1, ...rows.map((r) => r.total_kg));
 
   return (
     <>
@@ -177,9 +76,9 @@ export default function RecyclingPage() {
       >
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { n: "1", icon: "🧺", title: "Topshiring", text: "Qog‘oz yoki plastikni Eco Team’ga olib keling" },
+            { n: "1", icon: "🧺", title: "Sinf bilan to‘plang", text: "Qog‘oz yoki plastikni sinfingiz bilan yig‘ib, Eco Team’ga topshiring" },
             { n: "2", icon: "⚖️", title: "Eco Team o‘lchaydi", text: "Chiqindi tarozida tortiladi va vazni tasdiqlanadi" },
-            { n: "3", icon: "⭐", title: "Ball oling", text: `Har 1 kg uchun ${POINTS_PER_KG} ball hisobingizga tushadi` },
+            { n: "3", icon: "⭐", title: "Sinfingiz ball oladi", text: `Har 1 kg uchun ${POINTS_PER_KG} ball sinflar reytingiga qo‘shiladi` },
           ].map((s) => (
             <div key={s.n} className="glass-strong flex items-start gap-3 rounded-2xl p-4">
               <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-2xl">
@@ -193,176 +92,100 @@ export default function RecyclingPage() {
             </div>
           ))}
         </div>
-        {isStaff && (
+        {isAdmin && (
           <Link href="/admin/recycling" className="btn btn-lime btn-sm mt-5">
-            ⚙️ Topshiruvlarni tekshirish
+            ⚙️ Recycling kiritish
           </Link>
         )}
       </PageHero>
 
       <div className="container-page pb-20">
         {!sessionLoading && !user ? (
-          <LoginRequired text="Recycling topshirish va ball olish uchun akkauntingizga kiring." />
+          <LoginRequired text="Sinflar natijasini ko‘rish uchun akkauntingizga kiring." />
         ) : (
           <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-            {/* Forma */}
-            <Reveal from="left"><form onSubmit={submitRecycling} className="card p-6 sm:p-8">
-              <h2 className="text-2xl font-semibold">Topshiruvni ro‘yxatdan o‘tkazish</h2>
-              <p className="mt-1 text-sm text-muted">Chiqindini Eco Team’ga topshirganingizdan keyin shu yerda qayd eting. Yakuniy ball Eco Team tarozida o‘lchagan vazn bo‘yicha beriladi.</p>
-
-              <p className="label mt-7">
-                <span className="mr-2 inline-grid h-6 w-6 place-items-center rounded-full bg-glow text-[11px] text-forest-950">1</span>
-                Chiqindi turi
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {(Object.keys(materials) as (keyof typeof materials)[]).map((key) => {
-                  const m = materials[key];
-                  const active = material === key;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setMaterial(key)}
-                      aria-pressed={active}
-                      className={`relative rounded-2xl border p-4 text-left transition sm:p-5 ${
-                        active ? `border-transparent ${m.tint} ring-2 ${m.ring}` : "border-line bg-surface hover:bg-cream"
-                      }`}
-                    >
-                      {active && (
-                        <span className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-glow text-xs text-forest-950">
-                          ✓
-                        </span>
-                      )}
-                      <span className="text-3xl">{m.icon}</span>
-                      <span className="mt-3 block text-lg font-extrabold">{m.label}</span>
-                      <span className="block text-xs text-muted">{m.text}</span>
-                      <span className="mt-2 inline-block rounded-full bg-white/[0.06] px-2 py-0.5 text-[11px] font-bold text-accent">
-                        1 kg = {POINTS_PER_KG} ball
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <label className="label mt-7" htmlFor="kg">
-                <span className="mr-2 inline-grid h-6 w-6 place-items-center rounded-full bg-glow text-[11px] text-forest-950">2</span>
-                Tarozida ko‘rsatilgan vazn (kg)
-              </label>
-              <div className="relative">
-                <input
-                  id="kg"
-                  type="number"
-                  inputMode="decimal"
-                  min="0.01"
-                  max="500"
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="Masalan: 2.5"
-                  className="input pr-14 text-lg font-bold"
-                  required
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted">kg</span>
-              </div>
-              {estimate > 0 && (
-                <p className="hint font-bold text-accent">
-                  ≈ {estimate} ball (yakuniy ball Eco Team tasdiqlagan vazn asosida)
-                </p>
-              )}
-
-              <p className="label mt-7">
-                <span className="mr-2 inline-grid h-6 w-6 place-items-center rounded-full bg-glow text-[11px] text-forest-950">3</span>
-                Tarozidagi rasm (o‘lchash paytida)
-              </p>
-              <label
-                htmlFor="proof-image"
-                className="group flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-leaf-300 bg-leaf-100/40 p-5 text-center transition hover:bg-leaf-100"
-              >
-                {preview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={preview} alt="Tarozi rasmi" className="max-h-56 rounded-xl object-contain" />
-                ) : (
-                  <>
-                    <span className="text-4xl transition-transform group-hover:scale-110">⚖️</span>
-                    <span className="mt-3 text-sm font-extrabold text-accent">Rasmni tanlang yoki suratga oling</span>
-                    <span className="mt-1 max-w-xs text-xs leading-5 text-muted">
-                      Rasmda chiqindi va tarozidagi kg ko‘rsatkichi aniq ko‘rinsin · {MAX_MB} MB gacha
-                    </span>
-                  </>
-                )}
-              </label>
-              <input
-                id="proof-image"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                capture="environment"
-                onChange={(e) => pickFile(e.target.files?.[0] || null)}
-                className="sr-only"
-              />
-              {proofFile && (
-                <button type="button" onClick={() => setProofFile(null)} className="mt-2 text-xs font-bold text-coral-500 hover:underline">
-                  Rasmni almashtirish
-                </button>
-              )}
-
-              {message && (
-                <div className="mt-5">
-                  <Alert tone={message.error ? "error" : "success"}>{message.text}</Alert>
+            <Reveal from="left">
+              <div className="card p-6 sm:p-8">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-semibold">Sinflar reytingi</h2>
+                    <p className="mt-1 text-sm text-muted">Eco Team tarozida o‘lchab tasdiqlagan chiqindi</p>
+                  </div>
+                  <Link href="/class-leaderboard" className="text-sm font-extrabold text-accent hover:underline">Umumiy reyting →</Link>
                 </div>
-              )}
-
-              <button type="submit" disabled={sending} className="btn btn-primary mt-6 w-full py-4 text-base">
-                {sending && <Spinner />}
-                {sending ? "Yuborilmoqda..." : "Topshiruvni yuborish"}
-              </button>
-            </form></Reveal>
-
-            {/* Tarix */}
-            <Reveal from="right" as="aside" className="space-y-5">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="relative overflow-hidden rounded-[1.5rem] bg-glow p-5 text-forest-950">
-                  <span className="absolute -right-3 -top-3 text-6xl opacity-15 animate-sway">♻️</span>
-                  <p className="text-xs font-bold uppercase tracking-wider text-white/60">Topshirildi</p>
-                  <p className="mt-2 font-display text-3xl font-semibold">
-                    {formatNumber(totalKg, 2)} <span className="text-sm text-white/60">kg</span>
-                  </p>
-                </div>
-                <div className="rounded-[1.5rem] bg-leaf-300 p-5 text-forest-950">
-                  <p className="text-xs font-bold uppercase tracking-wider text-accent/70">Ballar</p>
-                  <p className="mt-2 font-display text-3xl font-semibold">+{totalPoints}</p>
-                </div>
-              </div>
-
-              <div className="card p-5 sm:p-6">
-                <h2 className="text-xl font-semibold">Mening topshiruvlarim</h2>
-                <div className="mt-4 space-y-3">
+                {error && <div className="mt-5"><Alert tone="error">{error}</Alert></div>}
+                <div className="mt-6 space-y-2.5">
                   {loading ? (
                     <>
                       <Skeleton className="h-16" />
                       <Skeleton className="h-16" />
+                      <Skeleton className="h-16" />
                     </>
-                  ) : submissions.length === 0 ? (
-                    <EmptyState icon="♻️" title="Hali topshiruv yo‘q" text="Birinchi topshiruvingizni yuboring!" />
+                  ) : rows.length === 0 ? (
+                    <EmptyState icon="♻️" title="Hali natija yo‘q" text="Birinchi topshiruvdan keyin sinflar shu yerda ko‘rinadi." />
                   ) : (
-                    submissions.map((item) => {
+                    rows.map((r, i) => {
+                      const mine = r.class_name === myClass;
+                      return (
+                        <div key={r.class_name} className={`rounded-2xl p-3.5 ring-1 ${mine ? "bg-leaf-100/50 ring-forest-500" : "bg-white/[0.03] ring-line"}`}>
+                          <div className="flex items-center gap-3">
+                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-sm font-black">
+                              {MEDALS[i] ?? i + 1}
+                            </span>
+                            <span className="font-extrabold">
+                              {r.class_name}
+                              {mine && <span className="chip ml-2 bg-glow align-middle text-forest-950">Sizning sinf</span>}
+                            </span>
+                            <span className="ml-auto font-display text-lg font-semibold">{formatNumber(r.total_kg, 1)} kg</span>
+                            <span className="w-16 text-right text-sm font-extrabold text-accent">+{r.points}</span>
+                          </div>
+                          <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                            <div className="h-full rounded-full bg-glow transition-all duration-700" style={{ width: `${(r.total_kg / maxKg) * 100}%` }} />
+                          </div>
+                          <p className="mt-1.5 text-[11px] text-muted">📄 {formatNumber(r.paper_kg, 1)} kg · 🧴 {formatNumber(r.plastic_kg, 1)} kg</p>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </Reveal>
+
+            <Reveal from="right" as="aside" className="space-y-5">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative overflow-hidden rounded-[1.5rem] bg-glow p-5 text-forest-950">
+                  <span className="absolute -right-3 -top-3 text-6xl opacity-15 animate-sway">♻️</span>
+                  <p className="text-xs font-bold uppercase tracking-wider text-forest-950/60">Maktab bo‘yicha</p>
+                  <p className="mt-2 font-display text-3xl font-semibold">
+                    {formatNumber(totalKg, 1)} <span className="text-sm text-forest-950/60">kg</span>
+                  </p>
+                </div>
+                <div className="rounded-[1.5rem] bg-leaf-300 p-5 text-forest-950">
+                  <p className="text-xs font-bold uppercase tracking-wider text-forest-950/60">Sinfingiz</p>
+                  <p className="mt-2 font-display text-3xl font-semibold">{myRank >= 0 ? `${myRank + 1}-o‘rin` : "—"}</p>
+                </div>
+              </div>
+
+              <div className="card p-5 sm:p-6">
+                <h2 className="text-xl font-semibold">So‘nggi o‘lchovlar</h2>
+                <div className="mt-4 space-y-3">
+                  {loading ? (
+                    <Skeleton className="h-16" />
+                  ) : recent.length === 0 ? (
+                    <EmptyState icon="⚖️" title="Hali o‘lchov yo‘q" />
+                  ) : (
+                    recent.map((item) => {
                       const m = materials[item.material] ?? materials.paper;
                       return (
                         <div key={item.id} className="flex items-center gap-3 rounded-2xl bg-cream p-3">
-                          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl ${m.tint}`}>
-                            {m.icon}
-                          </span>
+                          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl ${m.tint}`}>{m.icon}</span>
                           <div className="min-w-0 flex-1">
                             <p className="font-extrabold">
-                              {m.label} · {formatNumber(item.amount_kg, 2)} kg
+                              {item.class_name} · {formatNumber(Number(item.verified_amount_kg ?? item.amount_kg), 1)} kg
                             </p>
-                            <p className="text-xs text-muted">{formatDate(item.submitted_at)}</p>
+                            <p className="text-xs text-muted">{m.label} · {formatDate(item.submitted_at)}</p>
                           </div>
-                          <div className="text-right">
-                            <StatusBadge status={item.status} />
-                            {item.status === "approved" && (
-                              <p className="mt-1 text-sm font-extrabold text-accent">+{item.awarded_points}</p>
-                            )}
-                          </div>
+                          <p className="text-sm font-extrabold text-accent">+{item.awarded_points}</p>
                         </div>
                       );
                     })

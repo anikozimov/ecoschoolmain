@@ -13,7 +13,7 @@ export const CONTENT_PAGES = {
     defaults: {
       title: "Chiqindini topshiring —",
       accent: "ball oling.",
-      text: "Qog‘oz yoki plastikni Eco Team’ga olib keling. Eco Team uni tarozida o‘lchaydi va haqiqiy vaznga qarab ball beradi: 1 kg = 25 ball.",
+      text: "Sinfingiz bilan qog‘oz yoki plastik yig‘ib, Eco Team’ga topshiring. Eco Team uni tarozida o‘lchaydi va sinfingizga ball yozadi: 1 kg = 25 ball.",
     },
   },
   research: {

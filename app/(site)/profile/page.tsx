@@ -143,7 +143,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-leaf-300">
-                {isOwner ? "Bosh admin" : isAdmin ? "Administrator" : isStaff ? "Mentor" : "Eko-qahramon"}
+                {isOwner ? "Bosh admin" : isAdmin ? "Administrator" : isStaff ? "Tekshiruvchi" : "Eko-qahramon"}
               </p>
               <h1 className="mt-1 text-3xl font-semibold sm:text-4xl">{profile?.full_name || "Foydalanuvchi"}</h1>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
@@ -155,7 +155,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {isStaff && (
-              <Link href="/admin" className="btn btn-lime">⚙️ {isAdmin ? "Admin panel" : "Mentor paneli"}</Link>
+              <Link href="/admin" className="btn btn-lime">⚙️ {isAdmin ? "Admin panel" : "Tekshiruv paneli"}</Link>
             )}
             <button onClick={logout} className="btn bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20">
               Chiqish

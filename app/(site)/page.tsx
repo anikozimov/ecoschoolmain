@@ -68,14 +68,25 @@ function useParallax() {
   useEffect(() => {
     const el = ref.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Faqat sichqonchali qurilmada; ish kadrga bir marta
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    let raf = 0;
+    let ev: PointerEvent | null = null;
+    const apply = () => {
+      raf = 0;
+      if (!ev) return;
+      el.style.setProperty("--px", (ev.clientX / window.innerWidth - 0.5).toFixed(3));
+      el.style.setProperty("--py", (ev.clientY / window.innerHeight - 0.5).toFixed(3));
+    };
     const onMove = (e: PointerEvent) => {
-      const x = e.clientX / window.innerWidth - 0.5;
-      const y = e.clientY / window.innerHeight - 0.5;
-      el.style.setProperty("--px", x.toFixed(3));
-      el.style.setProperty("--py", y.toFixed(3));
+      ev = e;
+      if (!raf) raf = requestAnimationFrame(apply);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      cancelAnimationFrame(raf);
+    };
   }, []);
   return ref;
 }
