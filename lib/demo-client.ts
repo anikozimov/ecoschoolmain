@@ -48,14 +48,6 @@ const DB: Record<string, any[]> = {
   recycling_submissions: [
     { id: 20, school_id: 1, student_id: "s-aziz", material: "paper", amount_kg: 3.5, verified_amount_kg: null, status: "pending", awarded_points: 0, proof_image: null, submitted_at: ago(6), profiles: { full_name: "Aziz Karimov", class_name: "8-B" } },
     { id: 21, school_id: 1, student_id: UID, material: "plastic", amount_kg: 1.2, verified_amount_kg: 1.1, status: "approved", awarded_points: 28, proof_image: null, submitted_at: ago(170), profiles: { full_name: "Dilnoza Rahimova", class_name: "9-A" } },
-    { id: 22, school_id: 1, student_id: null, class_name: "9-A", material: "paper", amount_kg: 12.5, verified_amount_kg: 12.5, status: "approved", awarded_points: 313, note: "1-chorak aksiyasi", proof_image: null, submitted_at: ago(50), profiles: null },
-    { id: 23, school_id: 1, student_id: null, class_name: "8-B", material: "plastic", amount_kg: 6, verified_amount_kg: 6, status: "approved", awarded_points: 150, note: null, proof_image: null, submitted_at: ago(26), profiles: null },
-    { id: 24, school_id: 1, student_id: null, class_name: "10-A", material: "paper", amount_kg: 4.2, verified_amount_kg: 4.2, status: "approved", awarded_points: 105, note: null, proof_image: null, submitted_at: ago(3), profiles: null },
-  ],
-  mentors: [
-    { id: 1, full_name: "Gulnora Karimova", subject: "Biologiya o‘qituvchisi", bio: "Tadqiqot ishlarimizga ilmiy rahbarlik qildi va har bir jamoaga maslahat berdi.", photo_url: null, sort_order: 0 },
-    { id: 2, full_name: "Rustam Aliyev", subject: "Geografiya", bio: "Recycling aksiyasini tashkil qilishda yordam berdi.", photo_url: null, sort_order: 1 },
-    { id: 3, full_name: "Nodira Usmonova", subject: "Direktor o‘rinbosari", bio: "Loyihani maktabda joriy qilishni qo‘llab-quvvatladi.", photo_url: null, sort_order: 2 },
   ],
   eco_research: [
     { id: 30, student_id: "s-sevara", title: "Maktabimizda plastik chiqindilar hajmi", summary: "Bir hafta davomida oshxona va sinflardagi plastik chiqindilarni o‘lchadik va asosiy manbalarni aniqladik.", content: "Muammo: maktab oshxonasida har kuni ko‘plab bir martalik idishlar ishlatiladi.\n\nUsul: 5 kun davomida chiqindi qutilarini tortib, turlarga ajratdik.\n\nNatija: plastikning 60% dan ortig‘i ichimlik butilkalari bo‘ldi.\n\nXulosa: suv quyish nuqtasi o‘rnatilsa, plastik chiqindini ikki baravar kamaytirish mumkin.", sources: "UNEP — Single-use plastics (2023)", status: "pending", awarded_points: 0, reviewer_feedback: null, submitted_at: ago(30), team_name: "Yashil Avlod", team_members: "Sevara Olimova, Bekzod Aliyev, Madina Yusupova" },
@@ -72,20 +64,6 @@ const sortClasses = (list: any[]) =>
   [...list].sort((a, b) => (parseInt(a.class_name) || 99) - (parseInt(b.class_name) || 99) || a.class_name.localeCompare(b.class_name));
 
 const RPC: Record<string, (p: any) => any> = {
-  get_my_school_classes: () => sortClasses(DB.school_classes.filter((c) => String(c.school_id) === "1")).map((c) => ({ class_name: c.class_name })),
-  get_class_recycling: () => {
-    const m = new Map<string, any>();
-    DB.recycling_submissions.filter((r) => r.status === "approved").forEach((r) => {
-      const cn = r.class_name || r.profiles?.class_name;
-      if (!cn) return;
-      const kg = Number(r.verified_amount_kg ?? r.amount_kg);
-      const x = m.get(cn) ?? { class_name: cn, paper_kg: 0, plastic_kg: 0, total_kg: 0, points: 0, entries: 0 };
-      x[r.material === "paper" ? "paper_kg" : "plastic_kg"] += kg;
-      x.total_kg += kg; x.points += r.awarded_points; x.entries += 1;
-      m.set(cn, x);
-    });
-    return [...m.values()].sort((a, b) => b.total_kg - a.total_kg);
-  },
   admin_set_password: () => null,
   get_school_overall_impact: () => [
     { paper_kg: 142.5, plastic_kg: 63.2, recycling_kg: 205.7, recycling_points: 5140, approved_challenges: 87, challenge_points: 2310, total_points: 7450, active_students: 126 },
@@ -214,7 +192,6 @@ class Query {
   update(v: any) { this.op = "update"; this.payload = v; return this; }
   delete() { this.op = "delete"; return this; }
   eq(c: string, v: any) { this.filters.push((r) => r[c] === v); return this; }
-  is(c: string, v: any) { this.filters.push((r) => (r[c] ?? null) === v); return this; }
   gte(c: string, v: any) { this.filters.push((r) => r[c] >= v); return this; }
   in(c: string, v: any[]) { this.filters.push((r) => v.includes(r[c])); return this; }
   order(col: string, o?: { ascending?: boolean }) { this.orderBy = { col, asc: o?.ascending !== false }; return this; }
@@ -238,7 +215,7 @@ class Query {
 
     if (this.op === "insert") {
       const items = (Array.isArray(this.payload) ? this.payload : [this.payload]).map((p: any) => {
-        const base: any = ["challenges", "eco_events", "mentors"].includes(this.table)
+        const base: any = ["challenges", "eco_events"].includes(this.table)
           ? { created_at: new Date().toISOString() }
           : { submitted_at: new Date().toISOString(), status: "pending", awarded_points: 0 };
         const row: any = { id: nextId++, ...base, ...p };
@@ -248,11 +225,7 @@ class Query {
           row.challenges = ch ? { title: ch.title, points: ch.points } : null;
           row.profiles = { full_name: me.full_name, class_name: me.class_name };
         }
-        if (this.table === "recycling_submissions") {
-          // Sinf yozuvi: bazadagi trigger kabi darhol tasdiqlanadi
-          Object.assign(row, { student_id: null, school_id: 1, profiles: null, status: "approved", verified_amount_kg: row.amount_kg, awarded_points: Math.round(row.amount_kg * 25), class_name: String(row.class_name || "").toUpperCase() });
-        }
-        if (this.table === "mentors") row.sort_order ??= 0;
+        if (this.table === "recycling_submissions") row.profiles = { full_name: me.full_name, class_name: me.class_name };
         return row;
       });
       rows.unshift(...items);
@@ -340,7 +313,6 @@ export function createDemoClient(): any {
     storage: {
       from: () => ({
         upload: async () => ({ data: {}, error: null }),
-        getPublicUrl: () => ({ data: { publicUrl: "" } }),
         remove: async () => ({ data: [], error: null }),
         createSignedUrls: async () => ({ data: [], error: null }),
         createSignedUrl: async () => ({ data: null, error: { message: "demo" } }),

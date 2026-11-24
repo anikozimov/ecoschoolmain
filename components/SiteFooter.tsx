@@ -3,7 +3,7 @@ import { Logo, NAV, TELEGRAM_URL } from "./brand";
 
 export default function SiteFooter() {
   return (
-    <footer className="relative mt-auto overflow-hidden bg-forest-900 pb-24 text-white/80 lg:pb-28">
+    <footer className="relative mt-auto overflow-hidden bg-forest-900 text-white/80">
       <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-forest-700/60 blur-3xl" />
       <div className="container-page relative grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>

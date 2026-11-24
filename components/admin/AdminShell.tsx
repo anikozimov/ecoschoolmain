@@ -21,15 +21,14 @@ const AdminContext = createContext<{ counts: Counts; refreshCounts: () => Promis
 
 export const useAdmin = () => useContext(AdminContext);
 
-// mentor: true — eski "mentor" rolidagi foydalanuvchi ham ko'radi (faqat tekshiruv)
+// mentor: true — mentor ham ko'radi (faqat tekshiruv bo'limlari)
 const NAV = [
   { href: "/admin", label: "Boshqaruv paneli", icon: "📊", key: null, group: null, mentor: true },
   { href: "/admin/challenges", label: "Challenge topshiriqlari", icon: "🎯", key: "challenges", group: "Tekshiruv", mentor: true },
+  { href: "/admin/recycling", label: "Recycling", icon: "♻️", key: "recycling", group: null, mentor: true },
   { href: "/admin/research", label: "Tadqiqotlar", icon: "📚", key: "research", group: null, mentor: true },
-  { href: "/admin/recycling", label: "Recycling kiritish", icon: "♻️", key: "recycling", group: "Kiritish", mentor: true },
   { href: "/admin/challenge-list", label: "Challenge ro‘yxati", icon: "📝", key: null, group: "Sayt", mentor: false },
   { href: "/admin/events", label: "Tadbirlar", icon: "📅", key: null, group: null, mentor: false },
-  { href: "/admin/mentors", label: "Mentorlar", icon: "🎓", key: null, group: null, mentor: false },
   { href: "/admin/students", label: "Foydalanuvchilar", icon: "👥", key: null, group: null, mentor: false },
   { href: "/admin/schools", label: "Maktab va sinflar", icon: "🏫", key: null, group: null, mentor: false },
   { href: "/admin/content", label: "Sahifa matnlari", icon: "✍️", key: null, group: null, mentor: false },
@@ -91,12 +90,12 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   const total = counts.challenges + counts.recycling + counts.research;
   const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
   const nav = NAV.filter((item) => isAdmin || item.mentor);
-  const roleLabel = isOwner ? "Bosh admin" : isAdmin ? "Administrator" : "Tekshiruvchi";
+  const roleLabel = isOwner ? "Bosh admin" : isAdmin ? "Administrator" : "Mentor";
   // Mentor sayt sozlamalari sahifasini ochsa (havola orqali) — kirishga ruxsat yo'q
   const blocked = !isAdmin && NAV.some((n) => !n.mentor && isActive(n.href));
 
   const sidebar = (
-    <div className="relative flex min-h-full flex-col">
+    <div className="relative flex h-full flex-col">
       <Link href="/admin" className="px-2">
         <Logo light />
       </Link>
@@ -150,7 +149,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
         })}
       </nav>
 
-      <div className="mt-auto space-y-3 pt-6">
+      <div className="mt-auto space-y-3">
         {/* Timo yordamchi kartasi */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-forest-600 to-forest-800 p-4 pr-24 ring-1 ring-white/10">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-leaf-400/30 blur-2xl" />
@@ -187,7 +186,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   );
 
   const asideClass =
-    "overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:rgb(255_255_255/0.18)_transparent] bg-[radial-gradient(120%_60%_at_0%_0%,#27744b_0%,transparent_60%),linear-gradient(180deg,#133a26_0%,#0e2a1c_100%)] p-5";
+    "overflow-hidden bg-[radial-gradient(120%_60%_at_0%_0%,#27744b_0%,transparent_60%),linear-gradient(180deg,#133a26_0%,#0e2a1c_100%)] p-5";
   const current = NAV.find((n) => isActive(n.href));
 
   return (
@@ -264,7 +263,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
               <div className="card mx-auto mt-10 max-w-md p-10 text-center">
                 <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-coral-100 text-3xl">🔒</div>
                 <h1 className="mt-5 text-2xl font-semibold">Bu bo‘lim faqat admin uchun</h1>
-                <p className="mt-2 text-sm leading-6 text-muted">Siz faqat topshiriqlarni tekshirishingiz mumkin.</p>
+                <p className="mt-2 text-sm leading-6 text-muted">Mentor sifatida siz topshiriqlarni tekshirishingiz mumkin.</p>
                 <Link href="/admin" className="btn btn-primary mt-6">Boshqaruv paneli</Link>
               </div>
             ) : (

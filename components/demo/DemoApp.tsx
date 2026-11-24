@@ -9,7 +9,6 @@ import type { ComponentType } from "react";
 import { hashPath, navigate } from "@/lib/nav";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import BottomDock from "@/components/BottomDock";
 import { ScrollProgress } from "@/components/effects";
 import AdminShell from "@/components/admin/AdminShell";
 
@@ -21,7 +20,6 @@ import Leaderboard from "@/app/(site)/leaderboard/page";
 import ClassLeaderboard from "@/app/(site)/class-leaderboard/page";
 import Impact from "@/app/(site)/impact/page";
 import Calendar from "@/app/(site)/calendar/page";
-import Mentors from "@/app/(site)/mentors/page";
 import Profile from "@/app/(site)/profile/page";
 import Login from "@/app/login/page";
 import AdminHome from "@/app/admin/page";
@@ -29,7 +27,6 @@ import AdminChallenges from "@/app/admin/challenges/page";
 import AdminRecycling from "@/app/admin/recycling/page";
 import AdminResearch from "@/app/admin/research/page";
 import AdminEvents from "@/app/admin/events/page";
-import AdminMentors from "@/app/admin/mentors/page";
 import AdminChallengeList from "@/app/admin/challenge-list/page";
 import AdminStudents from "@/app/admin/students/page";
 import AdminContent from "@/app/admin/content/page";
@@ -44,7 +41,6 @@ const SITE: Record<string, ComponentType> = {
   "/class-leaderboard": ClassLeaderboard,
   "/impact": Impact,
   "/calendar": Calendar,
-  "/mentors": Mentors,
   "/profile": Profile,
 };
 const ADMIN: Record<string, ComponentType> = {
@@ -54,7 +50,6 @@ const ADMIN: Record<string, ComponentType> = {
   "/recycling-admin": AdminRecycling,
   "/admin/research": AdminResearch,
   "/admin/events": AdminEvents,
-  "/admin/mentors": AdminMentors,
   "/admin/challenge-list": AdminChallengeList,
   "/admin/students": AdminStudents,
   "/admin/content": AdminContent,
@@ -112,7 +107,6 @@ export default function DemoApp() {
         </div>
       </main>
       <SiteFooter />
-      <BottomDock />
     </>
   );
 }

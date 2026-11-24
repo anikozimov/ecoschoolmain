@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/fraunces";
+import "@fontsource-variable/fraunces/full.css";
 import "@fontsource-variable/nunito";
 import "./globals.css";
 import { SessionProvider } from "@/lib/session";
