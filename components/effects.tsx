@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ElementType, ReactNode } from "react";
 
-const reduceMotion = () =>
-  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+import { isCalm } from "@/lib/perf";
+
+/** Telefon, kuchsiz qurilma yoki "kamroq harakat" — effektlar o'chadi */
+const reduceMotion = () => typeof window !== "undefined" && isCalm();
 
 /* ─────────── Scroll'da paydo bo‘lish ─────────── */
 export function Reveal({
@@ -120,50 +122,12 @@ export function Magnetic({ children, strength = 0.3 }: { children: ReactNode; st
   );
 }
 
-/* ─────────── Uchib yuruvchi barglar ─────────── */
-const LEAVES = ["🍃", "🌿", "🍂", "🌱", "🍀"];
-
-export function FallingLeaves({ count = 14, className = "" }: { count?: number; className?: string }) {
-  const [items, setItems] = useState<
-    { id: number; left: number; delay: number; duration: number; size: number; leaf: string; drift: number }[]
-  >([]);
-
-  useEffect(() => {
-    if (reduceMotion()) return;
-    setItems(
-      Array.from({ length: count }, (_, i) => ({
-        id: i,
-        left: Math.random() * 100,
-        delay: -Math.random() * 18,
-        duration: 12 + Math.random() * 12,
-        size: 14 + Math.random() * 16,
-        leaf: LEAVES[i % LEAVES.length],
-        drift: (Math.random() - 0.5) * 160,
-      }))
-    );
-  }, [count]);
-
-  return (
-    <div aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}>
-      {items.map((l) => (
-        <span
-          key={l.id}
-          className="leaf"
-          style={
-            {
-              left: `${l.left}%`,
-              fontSize: l.size,
-              animationDuration: `${l.duration}s`,
-              animationDelay: `${l.delay}s`,
-              "--drift": `${l.drift}px`,
-            } as CSSProperties
-          }
-        >
-          {l.leaf}
-        </span>
-      ))}
-    </div>
-  );
+/* ─────────── Uchib yuruvchi barglar ───────────
+   Telefonlarni qotirgani uchun o'chirildi. Komponent sahifalarda qoldi,
+   lekin hech narsa chizmaydi. */
+export function FallingLeaves(_props: { count?: number; className?: string }) {
+  void _props;
+  return null;
 }
 
 /* ─────────── Sichqoncha bo‘yicha parallaks ─────────── */
@@ -198,14 +162,22 @@ export function Parallax({ children, depth = 20, className = "" }: { children: R
 export function ScrollProgress() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const onScroll = () => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
       const h = document.documentElement;
       const p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
       if (ref.current) ref.current.style.transform = `scaleX(${p})`;
     };
-    onScroll();
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
   }, []);
   return (
     <div

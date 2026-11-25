@@ -1,29 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { perfTier } from "@/lib/perf";
 
 /**
  * Butun sayt uchun "tungi o‘rmon" muhiti (aurora dog‘lari, yorug‘ qo‘ng‘izlar, kursor nuri).
  *
  * TEZLIK:
- *  - Qurilma kuchiga qarab 3 daraja: full (kompyuter), lite (telefon/kuchsiz), off (tejamkor rejim)
- *  - <html data-perf="lite|off"> — og'ir CSS effektlar (xiralashtirish, animatsiya) o'chadi
+ *  - Daraja lib/perf.ts da aniqlanadi; telefon/kuchsiz qurilmada canvas umuman ishlamaydi
  *  - Qo‘ng‘izlar oldindan chizilgan rasm (sprite) bilan chiziladi — har kadrda gradient yaratilmaydi
  *  - Kadrlar soni cheklangan (full: 60, lite: 30), sahifa yashirin bo‘lsa — to‘xtaydi
  *  - Sichqoncha harakati kadrga bir marta qayta ishlanadi
  */
-type Tier = "full" | "lite" | "off";
-
-function detectTier(): Tier {
-  const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return "off";
-  if (nav.connection?.saveData) return "off";
-  if ((nav.deviceMemory ?? 8) <= 2) return "off";
-  const coarse = window.matchMedia("(pointer: coarse)").matches;
-  const weak = (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
-  return coarse || weak ? "lite" : "full";
-}
-
 /** Bitta qo‘ng‘iz rasmi (radial nur) — bir marta chiziladi, keyin faqat nusxalanadi */
 function makeSprite(hue: number) {
   const size = 64;
@@ -45,13 +33,11 @@ export default function Ambient() {
   const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const tier = detectTier();
-    const root = document.documentElement;
-    if (tier === "full") delete root.dataset.perf;
-    else root.dataset.perf = tier;
-
+    // Daraja <head> dagi skriptda aniqlangan (lib/perf.ts)
+    const tier = perfTier();
     const canvas = canvasRef.current;
-    const ctx = tier === "off" ? null : canvas?.getContext("2d") ?? null;
+    // Yorug' qo'ng'izlar faqat kuchli kompyuterda — telefonda umuman chizilmaydi
+    const ctx = tier === "full" ? canvas?.getContext("2d") ?? null : null;
     const finePointer = window.matchMedia("(pointer: fine)").matches;
     const mouse = { x: -9999, y: -9999 };
     const frameMs = tier === "full" ? 1000 / 60 : 1000 / 30;
@@ -74,7 +60,7 @@ export default function Ambient() {
       canvas.style.width = w + "px";
       canvas.style.height = h + "px";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = tier === "full" ? Math.round(Math.min(48, (w * h) / 26000)) : Math.round(Math.min(14, (w * h) / 30000));
+      const count = Math.round(Math.min(24, (w * h) / 40000));
       flies = Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,

@@ -518,20 +518,20 @@ h1, h2, h3, .font-display {
 
 
 /* ═════════ TEZLIK: kuchsiz qurilmalar va telefonlar uchun yengil rejim ═════════
-   <html data-perf="lite"> — Ambient.tsx qurilmaga qarab o'rnatadi */
-[data-perf="lite"] .aurora-bg span { animation: none; filter: blur(60px); mix-blend-mode: normal; opacity: 0.4; }
-[data-perf="lite"] .aurora::before { animation: none; }
-[data-perf="lite"] .text-aurora { animation: none; filter: none; }
-[data-perf="lite"] .portal-ring { filter: none; }
-[data-perf="lite"] .glow-pulse { animation: none; }
-[data-perf="lite"] .cursor-glow,
-[data-perf="lite"] .card::before,
-[data-perf="lite"] .card::after { display: none; }
+   <html data-perf="lite"> — lib/perf.ts sahifa yuklanishidan oldin o'rnatadi */
+:is([data-perf="lite"], [data-perf="off"]) .aurora-bg span { animation: none; filter: blur(60px); mix-blend-mode: normal; opacity: 0.4; }
+:is([data-perf="lite"], [data-perf="off"]) .aurora::before { animation: none; }
+:is([data-perf="lite"], [data-perf="off"]) .text-aurora { animation: none; filter: none; }
+:is([data-perf="lite"], [data-perf="off"]) .portal-ring { filter: none; }
+:is([data-perf="lite"], [data-perf="off"]) .glow-pulse { animation: none; }
+:is([data-perf="lite"], [data-perf="off"]) .cursor-glow,
+:is([data-perf="lite"], [data-perf="off"]) .card::before,
+:is([data-perf="lite"], [data-perf="off"]) .card::after { display: none; }
 /* Orqa fonni xiralashtirish telefonlarda eng og'ir effekt — o'chiriladi */
-[data-perf="lite"] *, [data-perf="lite"] *::before, [data-perf="lite"] *::after {
+:is([data-perf="lite"], [data-perf="off"]) *, :is([data-perf="lite"], [data-perf="off"]) *::before, :is([data-perf="lite"], [data-perf="off"]) *::after {
   -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
 }
-[data-perf="lite"] .glass-strong { background: rgb(20 48 33 / 0.9); }
+:is([data-perf="lite"], [data-perf="off"]) .glass-strong { background: rgb(20 48 33 / 0.9); }
 
 /* ═════════ PASTKI MENYU (Dock) ═════════ */
 .dock {
@@ -605,7 +605,36 @@ h1, h2, h3, .font-display {
 @keyframes fade-in { from { opacity: 0; } }
 
 /* Yengil rejim: xiralashtirishsiz, lekin to'liq fon */
-[data-perf="lite"] .dock { background: linear-gradient(180deg, rgb(24 56 38 / 0.98), rgb(8 24 16 / 0.99)); }
+:is([data-perf="lite"], [data-perf="off"]) .dock { background: linear-gradient(180deg, rgb(24 56 38 / 0.98), rgb(8 24 16 / 0.99)); }
 @media (prefers-reduced-motion: reduce) {
   .dock-indicator, .dock-icon, .tab-icon, .sheet, .sheet-item { transition: none; animation: none; }
 }
+
+/* ═════════ TINCH REJIM: telefon, planshet, kuchsiz kompyuter ═════════
+   To'xtovsiz animatsiyalar butunlay o'chadi — faqat bosishga javob beradigan
+   qisqa effektlar (tugma, menyu, oyna ochilishi) qoladi. */
+:is([data-perf="lite"], [data-perf="off"]) :is(
+  .leaf, .text-gradient-anim, .blob, .spin-slow, .pulse-ring::before, .marquee, .wave-path,
+  .aurora::before, .aurora-bg span, .text-aurora, .portal-ring, .orbit, .orbit > *, .beam, .glow-pulse,
+  .animate-float, .animate-sway, .animate-bounce, .animate-ping, .logo-dot
+) { animation: none !important; }
+:is([data-perf="lite"], [data-perf="off"]) .leaf { display: none; }
+/* Scroll'da chiqib kelish va sahifa almashish animatsiyasi — darhol ko'rinadi */
+:is([data-perf="lite"], [data-perf="off"]) .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+:is([data-perf="lite"], [data-perf="off"]) .page-enter { animation: none; }
+/* Yugurib o'tuvchi lenta to'xtaganda ikkinchi nusxasi ko'rinmasin */
+:is([data-perf="lite"], [data-perf="off"]) .marquee-mask { mask-image: none; -webkit-mask-image: none; }
+/* Aylanuvchi orbitadagi belgilar to'xtagan holatda ham chiroyli turadi; harakatlanuvchi effektlar soyasi kamaytiriladi */
+:is([data-perf="lite"], [data-perf="off"]) .tilt { transform: none !important; }
+
+/* "Kamroq harakat": deyarli hech qanday animatsiya */
+[data-perf="off"] *, [data-perf="off"] *::before, [data-perf="off"] *::after {
+  animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+}
+
+/* Kompyuterda ham ortiqcha harakat kamaytirildi: faqat sekin fon nuri, orbita,
+   lenta va suzuvchi belgilar qoladi */
+.leaf, .text-gradient-anim, .text-aurora, .wave-path, .pulse-ring::before, .beam, .glow-pulse,
+.blob, .animate-bounce, .animate-ping, .logo-dot { animation: none !important; }
+.leaf { display: none; }
