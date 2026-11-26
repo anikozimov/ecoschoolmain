@@ -25,6 +25,7 @@ export type SessionState = {
   isMentor: boolean;
   /** Admin yoki mentor — admin panelga kira oladi */
   isStaff: boolean;
+  isVolunteer: boolean;
   /** Bosh admin (Supabase'da tayinlangan) */
   isOwner: boolean;
   loading: boolean;
@@ -89,6 +90,7 @@ function useSessionLoader(): SessionState {
     isAdmin: profile?.role === "admin",
     isMentor: profile?.role === "mentor",
     isStaff: profile?.role === "admin" || profile?.role === "mentor",
+    isVolunteer: profile?.role === "volunteer",
     isOwner: profile?.role === "admin" && !!profile?.is_owner,
     loading,
     refresh: load,

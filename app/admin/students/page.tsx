@@ -18,10 +18,11 @@ type Student = {
   is_owner?: boolean | null;
 };
 
-const ROLES = ["student", "admin"] as const;
+const ROLES = ["student", "volunteer", "admin"] as const;
 const ROLE_TEXT: Record<string, string> = {
   student: "Oddiy foydalanuvchi: topshiriq yuboradi, ball to‘playdi.",
   mentor: "Topshiriqlarni tekshiradi (eski rol).",
+  volunteer: "Qilgan ishini va necha soat ishlaganini yuboradi, admin tekshiradi. O‘quvchilar reytingida qatnashmaydi.",
   admin: "Hamma narsani boshqaradi: topshiriqlar, sahifalar, maktablar, foydalanuvchilar.",
 };
 
@@ -186,6 +187,7 @@ export default function AdminStudentsPage() {
         <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="input py-2.5 md:max-w-[180px]" aria-label="Rol">
           <option value="all">Barcha rollar</option>
           <option value="student">O‘quvchilar</option>
+          <option value="volunteer">Volontyorlar</option>
           <option value="admin">Adminlar</option>
         </select>
         <select value={cls} onChange={(e) => setCls(e.target.value)} className="input py-2.5 md:max-w-[180px]" aria-label="Sinf">
@@ -226,6 +228,8 @@ export default function AdminStudentsPage() {
                       <span className="chip ml-2 bg-amber-300 align-middle text-forest-950">👑 Bosh admin</span>
                     ) : s.role === "admin" ? (
                       <span className="chip ml-2 bg-glow align-middle text-forest-950">Admin</span>
+                    ) : s.role === "volunteer" ? (
+                      <span className="chip ml-2 bg-[#fbf1da] align-middle text-forest-950">🤝 Volontyor</span>
                     ) : s.role === "mentor" ? (
                       <span className="chip ml-2 bg-sky-300 align-middle text-forest-950">Tekshiruvchi</span>
                     ) : null}
@@ -275,7 +279,7 @@ export default function AdminStudentsPage() {
           {formError && <Alert tone="error">{formError}</Alert>}
 
           {editing && (
-            <div className="rounded-2xl border border-line bg-white/[0.03] p-4">
+            <div className="rounded-2xl border border-line bg-ink/[0.03] p-4">
               <p className="label mb-2">Rol</p>
               {editing.is_owner ? (
                 <p className="text-sm text-muted">👑 Bosh admin. Uning roli faqat Supabase’dan o‘zgartiriladi.</p>
@@ -308,7 +312,7 @@ export default function AdminStudentsPage() {
           )}
 
           {editing && canResetPassword(editing) && (
-            <div className="rounded-2xl border border-line bg-white/[0.03] p-4">
+            <div className="rounded-2xl border border-line bg-ink/[0.03] p-4">
               <label className="label" htmlFor="s-pw">Parolni tiklash</label>
               <div className="flex gap-2">
                 <input

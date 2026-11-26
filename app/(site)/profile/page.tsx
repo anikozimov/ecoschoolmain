@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { formatDate, initials, useSession } from "@/lib/session";
 import { LoginRequired, Skeleton, StatusBadge, type Status } from "@/components/ui";
+import { formatHours } from "@/lib/volunteer";
+import { ACHIEVEMENTS, levelOf, loadStats, loadWallet, type EcoStats, type Wallet } from "@/lib/eco";
 
 type Activity = {
   id: string;
@@ -19,21 +21,28 @@ type Activity = {
   date: string;
 };
 
-const LEVELS = [
-  { min: 0, name: "Urug‘", icon: "🌰" },
-  { min: 50, name: "Nihol", icon: "🌱" },
-  { min: 150, name: "Barg", icon: "🍃" },
-  { min: 300, name: "Daraxt", icon: "🌳" },
-  { min: 600, name: "O‘rmon", icon: "🌲" },
-  { min: 1000, name: "Eko-qahramon", icon: "🦸" },
-];
 
 export default function ProfilePage() {
   const router = useAppRouter();
-  const { user, profile, isAdmin, isStaff, isOwner, loading } = useSession();
+  const { user, profile, isAdmin, isStaff, isOwner, isVolunteer, loading } = useSession();
   const [supabase] = useState(() => createClient());
   const [activity, setActivity] = useState<Activity[]>([]);
   const [activityLoading, setActivityLoading] = useState(true);
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [stats, setStats] = useState<EcoStats | null>(null);
+  const [volHours, setVolHours] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user || !isVolunteer) return;
+    supabase.rpc("my_volunteer_hours").then(({ data }: { data: unknown }) => setVolHours(Number(data ?? 0)));
+  }, [user, isVolunteer, supabase]);
+
+  useEffect(() => {
+    if (!user) return;
+    const xp = profile?.points ?? 0;
+    loadWallet(supabase, xp).then(({ wallet: w }) => setWallet(w));
+    loadStats(supabase, user.id, profile?.class_name ?? null, xp).then(setStats).catch(() => setStats(null));
+  }, [user, profile?.points, profile?.class_name, supabase]);
 
   useEffect(() => {
     if (!user) return;
@@ -123,10 +132,8 @@ export default function ProfilePage() {
   }
 
   const points = profile?.points ?? 0;
-  const levelIndex = LEVELS.reduce((acc, l, i) => (points >= l.min ? i : acc), 0);
-  const level = LEVELS[levelIndex];
-  const next = LEVELS[levelIndex + 1];
-  const progress = next ? ((points - level.min) / (next.min - level.min)) * 100 : 100;
+  const { index: levelIndex, level, next, progress, toNext } = levelOf(points);
+  const earned = stats ? ACHIEVEMENTS.filter((a) => a.done(stats)).length : 0;
   const kindIcon = { challenge: "🎯", recycling: "♻️", research: "📚" };
 
   return (
@@ -164,16 +171,25 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         {/* Daraja */}
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4">
           <div className="card p-6">
-            <p className="text-sm font-bold text-muted">Eco ballaringiz</p>
-            <p className="mt-1 font-display text-6xl font-semibold text-accent">{points}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-sm font-bold text-muted">XP</p>
+                <p className="mt-1 font-display text-5xl font-semibold text-accent">{points}</p>
+              </div>
+              <Link href="/shop" className="rounded-2xl bg-sand-100 p-3 transition hover:ring-2 hover:ring-sand-400">
+                <p className="text-sm font-bold text-muted">EcoCoin</p>
+                <p className="mt-1 font-display text-3xl font-semibold text-sand-400">🪙 {wallet ? wallet.balance : "…"}</p>
+                <p className="mt-1 text-[11px] font-bold text-muted">Do‘konga →</p>
+              </Link>
+            </div>
             <div className="mt-6 flex items-center gap-3 rounded-2xl bg-leaf-100 p-4">
               <span className="text-4xl animate-sway">{level.icon}</span>
               <div className="flex-1">
-                <p className="text-xs font-bold text-muted">Darajangiz</p>
+                <p className="text-xs font-bold text-muted">Darajangiz · LVL {levelIndex + 1}</p>
                 <p className="text-lg font-extrabold text-accent">{level.name}</p>
               </div>
             </div>
@@ -186,12 +202,39 @@ export default function ProfilePage() {
                 <div className="mt-2 h-3 rounded-full bg-cream">
                   <div className="bar-grow h-full rounded-full bg-gradient-to-r from-forest-500 to-leaf-400" style={{ width: `${progress}%` }} />
                 </div>
-                <p className="mt-2 text-xs text-muted">Keyingi darajagacha {next.min - points} ball qoldi</p>
+                <p className="mt-2 text-xs text-muted">Keyingi darajagacha {toNext} XP qoldi</p>
               </div>
             ) : (
               <p className="mt-4 text-sm font-bold text-accent">Siz eng yuqori darajadasiz! 🎉</p>
             )}
           </div>
+
+          {isVolunteer && (
+            <Link href="/volunteer" className="card card-hover flex items-center gap-3 p-4">
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-sand-100 text-2xl">🤝</span>
+              <span className="flex-1">
+                <span className="block font-extrabold">Volontyor ishlarim</span>
+                <span className="block text-xs text-muted">{volHours === null ? "…" : `Tasdiqlangan: ${formatHours(volHours)}`}</span>
+              </span>
+              <span className="text-accent">→</span>
+            </Link>
+          )}
+          <Link href="/timo" className="card card-hover flex items-center gap-3 p-4">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-leaf-100 text-2xl">🐢</span>
+            <span className="flex-1">
+              <span className="block font-extrabold">Timo bog‘im</span>
+              <span className="block text-xs text-muted">Shaxsiy yordamchi va virtual bog‘</span>
+            </span>
+            <span className="text-accent">→</span>
+          </Link>
+          <Link href="/certificate" className="card card-hover flex items-center gap-3 p-4">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-sand-100 text-2xl">📜</span>
+            <span className="flex-1">
+              <span className="block font-extrabold">Sertifikatim</span>
+              <span className="block text-xs text-muted">Chop etish yoki PDF qilib saqlash</span>
+            </span>
+            <span className="text-accent">→</span>
+          </Link>
 
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -206,6 +249,31 @@ export default function ProfilePage() {
             ))}
           </div>
         </aside>
+
+        <div className="space-y-6">
+        {/* Yutuqlar */}
+        <section className="card p-6 sm:p-7">
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="text-2xl font-semibold">Yutuqlar</h2>
+            <span className="chip bg-leaf-100 text-accent">{stats ? `${earned} / ${ACHIEVEMENTS.length}` : "…"}</span>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
+            {ACHIEVEMENTS.map((a) => {
+              const done = !!stats && a.done(stats);
+              return (
+                <div
+                  key={a.id}
+                  className={`rounded-2xl p-3.5 text-center ring-1 transition ${done ? "bg-leaf-100 ring-forest-500/50" : "bg-ink/[0.02] ring-line opacity-55 grayscale"}`}
+                  title={done ? "Olingan" : "Hali olinmagan"}
+                >
+                  <span className="text-3xl">{a.icon}</span>
+                  <p className="mt-1.5 text-sm font-extrabold leading-tight">{a.title}</p>
+                  <p className="mt-1 text-[11px] leading-snug text-muted">{a.text}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
         {/* Faoliyat */}
         <section className="card p-6 sm:p-7">
@@ -243,6 +311,7 @@ export default function ProfilePage() {
             )}
           </div>
         </section>
+        </div>
       </div>
     </div>
   );

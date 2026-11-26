@@ -243,7 +243,7 @@ export default function AdminResearchPage() {
           visible.map((item) => (
             <article key={item.id} className="card flex flex-col p-5 sm:p-6">
               <div className="flex items-start gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sky-100 text-sm font-black text-[#8cc4f2]">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sky-100 text-sm font-black text-sky-500">
                   {item.team_name ? "👥" : initials(item.author?.full_name)}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -285,13 +285,13 @@ export default function AdminResearchPage() {
             </div>
             {active.sources && (
               <div className="mt-4 rounded-2xl bg-sky-100 p-4">
-                <p className="text-sm font-extrabold text-[#8cc4f2]">Manbalar</p>
-                <p className="mt-1 whitespace-pre-wrap break-words text-sm text-[#a9d3f5]">{active.sources}</p>
+                <p className="text-sm font-extrabold text-sky-500">Manbalar</p>
+                <p className="mt-1 whitespace-pre-wrap break-words text-sm text-sky-500">{active.sources}</p>
               </div>
             )}
 
             {active.status === "pending" ? (
-              <div className="mt-6 rounded-2xl bg-white/[0.04] p-5 ring-1 ring-line">
+              <div className="mt-6 rounded-2xl bg-ink/[0.04] p-5 ring-1 ring-line">
                 <div className="flex items-center justify-between">
                   <h4 className="text-lg font-extrabold">Baholash</h4>
                   <span className="font-display text-3xl font-semibold text-accent">
@@ -325,7 +325,7 @@ export default function AdminResearchPage() {
               </div>
             ) : (
               active.reviewer_feedback && (
-                <div className="mt-4 rounded-2xl bg-sand-100 p-4 text-sm text-[#f3cf7f]">
+                <div className="mt-4 rounded-2xl bg-sand-100 p-4 text-sm text-sand-400">
                   <strong>Izoh:</strong> {active.reviewer_feedback}
                 </div>
               )

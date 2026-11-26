@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase";
 import { formatDate, formatNumber, useSession } from "@/lib/session";
 import { useSiteContent } from "@/lib/content";
 import { Alert, EmptyState, LoginRequired, PageHero, Skeleton } from "@/components/ui";
+import { BatchTracker, EcoFund, RecyclingCalculator } from "@/components/RecyclingExtras";
 
 type ClassRow = { class_name: string; paper_kg: number; plastic_kg: number; total_kg: number; points: number; entries: number };
 type Entry = { id: number; class_name: string; material: "paper" | "plastic"; amount_kg: number; verified_amount_kg: number | null; awarded_points: number; submitted_at: string };
@@ -28,6 +29,7 @@ export default function RecyclingPage() {
   const [recent, setRecent] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [income, setIncome] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     const [sRes, eRes] = await Promise.all([
@@ -81,7 +83,7 @@ export default function RecyclingPage() {
             { n: "3", icon: "⭐", title: "Sinfingiz ball oladi", text: `Har 1 kg uchun ${POINTS_PER_KG} ball sinflar reytingiga qo‘shiladi` },
           ].map((s) => (
             <div key={s.n} className="glass-strong flex items-start gap-3 rounded-2xl p-4">
-              <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-2xl">
+              <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-ink/[0.06] text-2xl">
                 {s.icon}
                 <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-glow text-[10px] font-black text-forest-950">{s.n}</span>
               </span>
@@ -103,6 +105,7 @@ export default function RecyclingPage() {
         {!sessionLoading && !user ? (
           <LoginRequired text="Sinflar natijasini ko‘rish uchun akkauntingizga kiring." />
         ) : (
+          <>
           <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <Reveal from="left">
               <div className="card p-6 sm:p-8">
@@ -127,9 +130,9 @@ export default function RecyclingPage() {
                     rows.map((r, i) => {
                       const mine = r.class_name === myClass;
                       return (
-                        <div key={r.class_name} className={`rounded-2xl p-3.5 ring-1 ${mine ? "bg-leaf-100/50 ring-forest-500" : "bg-white/[0.03] ring-line"}`}>
+                        <div key={r.class_name} className={`rounded-2xl p-3.5 ring-1 ${mine ? "bg-leaf-100/50 ring-forest-500" : "bg-ink/[0.03] ring-line"}`}>
                           <div className="flex items-center gap-3">
-                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.06] text-sm font-black">
+                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink/[0.06] text-sm font-black">
                               {MEDALS[i] ?? i + 1}
                             </span>
                             <span className="font-extrabold">
@@ -139,8 +142,8 @@ export default function RecyclingPage() {
                             <span className="ml-auto font-display text-lg font-semibold">{formatNumber(r.total_kg, 1)} kg</span>
                             <span className="w-16 text-right text-sm font-extrabold text-accent">+{r.points}</span>
                           </div>
-                          <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-white/[0.06]">
-                            <div className="h-full rounded-full bg-glow transition-all duration-700" style={{ width: `${(r.total_kg / maxKg) * 100}%` }} />
+                          <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-ink/[0.06]">
+                            <div className="h-full rounded-full bg-accent transition-all duration-700" style={{ width: `${(r.total_kg / maxKg) * 100}%` }} />
                           </div>
                           <p className="mt-1.5 text-[11px] text-muted">📄 {formatNumber(r.paper_kg, 1)} kg · 🧴 {formatNumber(r.plastic_kg, 1)} kg</p>
                         </div>
@@ -194,7 +197,15 @@ export default function RecyclingPage() {
               </div>
             </Reveal>
           </div>
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <BatchTracker onTotal={setIncome} />
+            <EcoFund income={income} />
+          </div>
+          </>
         )}
+        <div className="mt-6">
+          <RecyclingCalculator />
+        </div>
       </div>
     </>
   );

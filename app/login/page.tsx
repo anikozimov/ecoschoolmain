@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import timoImg from "@/public/timo.png";
+import timoImg from "@/public/timo.webp";
 import Link from "next/link";
 import { DEMO, hashQuery, useAppRouter } from "@/lib/nav";
 import { createClient } from "@/lib/supabase";
@@ -334,7 +334,7 @@ export default function LoginPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-line bg-white/[0.06] px-4 py-3.5 text-sm text-muted">
+                    <div className="rounded-2xl border border-dashed border-line bg-ink/[0.06] px-4 py-3.5 text-sm text-muted">
                       Avval maktab kodini tekshiring
                     </div>
                   )}

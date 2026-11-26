@@ -5,7 +5,7 @@ export type PodiumItem = { key: string; title: string; subtitle: string; points:
 const medals = ["🥇", "🥈", "🥉"];
 const heights = ["h-36 sm:h-44", "h-28 sm:h-32", "h-20 sm:h-24"];
 const colors = [
-  "bg-gradient-to-b from-sand-400 to-sand-500 text-forest-950",
+  "bg-gradient-to-b from-[#f6d98a] to-[#e9b949] text-forest-950",
   "bg-gradient-to-b from-[#e3e7e1] to-[#c9cfc7] text-forest-950",
   "bg-gradient-to-b from-[#f0c9a6] to-[#d9a47a] text-forest-950",
 ];

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import timoImg from "@/public/timo.png";
+import timoImg from "@/public/timo.webp";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
 import { useSession } from "@/lib/session";
@@ -19,7 +19,7 @@ type Impact = {
 
 const featured = [
   { icon: "🧴", tag: "Chiqindilar", title: "Plastiksiz bir hafta", text: "Bir martalik plastikdan voz keching — suv idishingizni o‘zingiz bilan olib yuring.", hue: "from-leaf-400/30" },
-  { icon: "📄", tag: "Resurslar", title: "Qog‘ozni asraymiz", text: "Daftarning ikki tomoniga yozing, eski qog‘ozni recyclingga topshiring.", hue: "from-sand-400/30" },
+  { icon: "📄", tag: "Resurslar", title: "Qog‘ozni asraymiz", text: "Daftarning ikki tomoniga yozing, eski qog‘ozni recyclingga topshiring.", hue: "from-[#e9b949]/25" },
   { icon: "💡", tag: "Energiya", title: "Chiroqni o‘chir!", text: "Sinfdan chiqayotganda chiroq va proyektorni o‘chirishni odat qiling.", hue: "from-sky-500/30" },
 ];
 
@@ -29,7 +29,6 @@ const steps = [
   { n: "03", icon: "⚡", title: "Porlang", text: "Eco Team tasdiqlagach, ballar sizga va sinfingizga qo‘shiladi." },
 ];
 
-const MARQUEE = ["REDUCE", "REUSE", "RECYCLE", "RESTORE", "TABIATNI ASRA", "ECO SCHOOL"];
 
 function CountUp({ value, digits = 0 }: { value: number; digits?: number }) {
   const [display, setDisplay] = useState(0);
@@ -133,19 +132,19 @@ export default function Home() {
             <Reveal>
               <span className="glass-strong inline-flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-4 text-xs font-bold text-ink">
                 <span className="relative flex h-6 items-center rounded-full bg-glow px-2.5 text-[10px] font-black text-forest-950">
-                  <span className="mr-1.5 h-1.5 w-1.5 animate-ping rounded-full bg-forest-950" />
+                  <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-forest-950" />
                   LIVE
                 </span>
                 {impact?.active_students ? `${impact.active_students} nafar o‘quvchi hozir harakatda` : "Kichik harakatlar — katta o‘zgarishlar"}
               </span>
             </Reveal>
 
-            <h1 className="mt-7 text-[clamp(3rem,8.5vw,7.4rem)] font-semibold leading-[0.92] tracking-[-0.04em]">
+            <h1 className="mt-7 text-[clamp(2.6rem,6.6vw,5.6rem)] font-semibold leading-[0.95] tracking-[-0.045em]">
               <Reveal as="span" className="block" delay={80}>
                 <span className="block">{user ? `Salom, ${firstName || "qahramon"}` : "Sayyora"}</span>
               </Reveal>
               <Reveal as="span" className="block pb-2" delay={180}>
-                <span className="block italic text-aurora">{user ? "bugun porlaymiz." : "sizni kutmoqda."}</span>
+                <span className="block italic text-aurora">{user ? "bugun nimani yaxshilaymiz?" : "sizni kutmoqda."}</span>
               </Reveal>
             </h1>
 
@@ -242,30 +241,19 @@ export default function Home() {
           }}
           className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-muted md:flex">
           Pastga
-          <span className="relative h-10 w-6 rounded-full border border-white/25">
+          <span className="relative h-10 w-6 rounded-full border border-ink/25">
             <span className="absolute left-1/2 top-2 h-2 w-1 -translate-x-1/2 animate-bounce rounded-full bg-leaf-300" />
           </span>
         </a>
       </section>
 
-      {/* ═════════════ GIGANT MARQUEE ═════════════ */}
-      <section id="explore" className="relative -rotate-2 border-y border-line bg-forest-900/70 py-5 backdrop-blur">
-        <div className="marquee-mask overflow-hidden">
-          <div className="marquee flex w-max gap-10 whitespace-nowrap font-display text-5xl font-semibold italic sm:text-7xl">
-            {[...MARQUEE, ...MARQUEE].map((w, i) => (
-              <span key={i} className={i % 2 ? "text-outline" : "text-outline-solid"}>
-                {w} <span className="not-italic text-leaf-300">✦</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+      <span id="explore" />
 
       {/* ═════════════ BENTO ═════════════ */}
       <section className="container-page py-24 sm:py-32">
         <Reveal>
           <p className="eyebrow">Maktabimiz raqamlarda</p>
-          <h2 className="mt-4 max-w-3xl text-5xl font-semibold leading-[1] sm:text-7xl">
+          <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-[1.05] sm:text-6xl">
             Har bir gramm <span className="italic text-aurora">hisobda.</span>
           </h2>
         </Reveal>
@@ -283,8 +271,8 @@ export default function Home() {
                   {impact ? <CountUp value={recycled} digits={1} /> : "—"}
                   <span className="ml-2 font-sans text-2xl font-bold text-muted">kg</span>
                 </p>
-                <div className="mt-6 flex h-3 overflow-hidden rounded-full bg-white/5">
-                  <div className="bar-grow bg-gradient-to-r from-sand-400 to-sand-500" style={{ width: `${recycled ? ((impact?.paper_kg ?? 0) / recycled) * 100 : 50}%` }} />
+                <div className="mt-6 flex h-3 overflow-hidden rounded-full bg-ink/5">
+                  <div className="bar-grow bg-gradient-to-r from-[#e9b949] to-[#d99a1e]" style={{ width: `${recycled ? ((impact?.paper_kg ?? 0) / recycled) * 100 : 50}%` }} />
                   <div className="bar-grow flex-1 bg-gradient-to-r from-sky-500 to-[#3fd6a0]" />
                 </div>
                 <div className="mt-3 flex justify-between text-sm font-bold text-muted">
@@ -350,7 +338,7 @@ export default function Home() {
             {steps.map((s, i) => (
               <Reveal key={s.n} delay={i * 140}>
                 <div className="group text-center">
-                  <div className="relative mx-auto grid h-[104px] w-[104px] place-items-center rounded-[2rem] glass-strong text-5xl transition duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_0_50px_-5px_rgb(166_235_122/0.6)]">
+                  <div className="relative mx-auto grid h-[104px] w-[104px] place-items-center rounded-[2rem] glass-strong text-5xl transition duration-500 group-hover:-translate-y-1">
                     {s.icon}
                     <span className="absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full bg-glow font-display text-sm font-bold text-forest-950">
                       {s.n}
@@ -385,7 +373,7 @@ export default function Home() {
               <Link href="/challenges" className="card group flex h-full flex-col overflow-hidden p-7 transition duration-500 hover:-translate-y-2">
                 <div className={`pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b ${c.hue} to-transparent opacity-60 transition-opacity duration-500 group-hover:opacity-100`} />
                 <div className="flex items-center justify-between">
-                  <span className="chip bg-white/[0.06] text-ink ring-1 ring-white/10">{c.tag}</span>
+                  <span className="chip bg-ink/[0.06] text-ink ring-1 ring-ink/10">{c.tag}</span>
                   <span className="font-display text-sm text-muted">0{i + 1}</span>
                 </div>
                 <div className="mt-10 text-6xl transition-transform duration-500 group-hover:-translate-y-2 group-hover:scale-110 group-hover:-rotate-6">
@@ -416,7 +404,7 @@ export default function Home() {
               {...(x.ext ? { target: "_blank", rel: "noopener noreferrer" } : {})}
               className="card group flex h-full items-center gap-5 p-6"
             >
-              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/[0.06] text-3xl ring-1 ring-white/10 transition duration-500 group-hover:scale-110 group-hover:bg-leaf-200">
+              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-ink/[0.06] text-3xl ring-1 ring-ink/10 transition duration-500 group-hover:scale-110 group-hover:bg-leaf-200">
                 {x.icon}
               </span>
               <span className="flex-1">
@@ -439,7 +427,7 @@ export default function Home() {
             </div>
             <div className="relative">
               <p className="eyebrow justify-center">Sizning navbatingiz</p>
-              <h2 className="mx-auto mt-5 max-w-3xl text-5xl font-semibold leading-[1] sm:text-7xl">
+              <h2 className="mx-auto mt-5 max-w-3xl text-4xl font-semibold leading-[1.05] sm:text-6xl">
                 Kelajak <span className="italic text-aurora">bugun</span> boshlanadi.
               </h2>
               <p className="mx-auto mt-6 max-w-md text-lg text-muted">

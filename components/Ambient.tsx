@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { perfTier } from "@/lib/perf";
+import { EFFECTS_EVENT } from "@/lib/effects-pref";
 
 /**
  * Butun sayt uchun "tungi o‘rmon" muhiti (aurora dog‘lari, yorug‘ qo‘ng‘izlar, kursor nuri).
@@ -31,13 +32,22 @@ function makeSprite(hue: number) {
 export default function Ambient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
+  // "Effektlar" tugmasi bosilsa — qayta ishga tushadi (yoki to'xtaydi)
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    const bump = () => setVersion((v) => v + 1);
+    window.addEventListener(EFFECTS_EVENT, bump);
+    return () => window.removeEventListener(EFFECTS_EVENT, bump);
+  }, []);
 
   useEffect(() => {
     // Daraja <head> dagi skriptda aniqlangan (lib/perf.ts)
     const tier = perfTier();
+    const glowEl = glowRef.current;
     const canvas = canvasRef.current;
     // Yorug' qo'ng'izlar faqat kuchli kompyuterda — telefonda umuman chizilmaydi
-    const ctx = tier === "full" ? canvas?.getContext("2d") ?? null : null;
+    // Yorug' mavzuda yorug' qo'ng'izlar chizilmaydi (sokin, professional fon)
+    const ctx = (tier === "full" && false ? canvas?.getContext("2d") : null) as CanvasRenderingContext2D | null;
     const finePointer = window.matchMedia("(pointer: fine)").matches;
     const mouse = { x: -9999, y: -9999 };
     const frameMs = tier === "full" ? 1000 / 60 : 1000 / 30;
@@ -166,16 +176,18 @@ export default function Ambient() {
       window.removeEventListener("resize", onResize);
       document.removeEventListener("pointerleave", onLeave);
       document.removeEventListener("visibilitychange", onVis);
+      ctx?.clearRect(0, 0, w, h);
+      if (glowEl) glowEl.style.opacity = "0";
     };
-  }, []);
+  }, [version]);
 
   return (
     <>
       <div className="aurora-bg" aria-hidden>
-        <span style={{ width: "52vw", height: "52vw", left: "-12vw", top: "-18vw", background: "#1f8f4e" }} />
-        <span style={{ width: "40vw", height: "40vw", right: "-10vw", top: "8vh", background: "#0f6e6a", animationDelay: "-6s" }} />
-        <span style={{ width: "34vw", height: "34vw", left: "30vw", bottom: "-14vw", background: "#5c8f16", animationDelay: "-12s", opacity: 0.35 }} />
-        <span style={{ width: "26vw", height: "26vw", right: "20vw", bottom: "10vh", background: "#1c5a8a", animationDelay: "-3s", opacity: 0.3 }} />
+        <span style={{ width: "52vw", height: "52vw", left: "-12vw", top: "-18vw", background: "#cfe8d8", opacity: 0.55 }} />
+        <span style={{ width: "40vw", height: "40vw", right: "-10vw", top: "8vh", background: "#d6e2f7", animationDelay: "-6s", opacity: 0.6 }} />
+        <span style={{ width: "34vw", height: "34vw", left: "30vw", bottom: "-14vw", background: "#e4efd9", animationDelay: "-12s", opacity: 0.5 }} />
+        <span style={{ width: "26vw", height: "26vw", right: "20vw", bottom: "10vh", background: "#d5ebe9", animationDelay: "-3s", opacity: 0.5 }} />
       </div>
       <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-[-1]" aria-hidden />
       <div ref={glowRef} className="cursor-glow opacity-0" aria-hidden />

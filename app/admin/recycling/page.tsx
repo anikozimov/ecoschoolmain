@@ -207,7 +207,7 @@ export default function AdminRecyclingPage() {
             </div>
             <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/15 backdrop-blur">
               <p className="text-[11px] font-bold uppercase tracking-wider text-white/55">Yozuvlar</p>
-              <p className="font-display text-2xl font-semibold text-sand-400">{classEntries.length}</p>
+              <p className="font-display text-2xl font-semibold text-[#f3c969]">{classEntries.length}</p>
             </div>
           </div>
         }
@@ -314,17 +314,17 @@ export default function AdminRecyclingPage() {
                   type="button"
                   onClick={() => setClassFilter(classFilter === r.class_name ? "all" : r.class_name)}
                   className={`block w-full rounded-2xl border p-3 text-left transition ${
-                    classFilter === r.class_name ? "border-forest-500 bg-leaf-100/40" : "border-line bg-white/[0.02] hover:border-forest-500/40"
+                    classFilter === r.class_name ? "border-forest-500 bg-leaf-100/40" : "border-line bg-ink/[0.02] hover:border-forest-500/40"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/[0.06] text-xs font-black">{i + 1}</span>
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-ink/[0.06] text-xs font-black">{i + 1}</span>
                     <span className="font-extrabold">{r.class_name}</span>
                     <span className="ml-auto text-sm font-extrabold">{formatNumber(r.total_kg, 1)} kg</span>
                     <span className="w-20 text-right text-sm font-extrabold text-accent">+{r.points}</span>
                   </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-                    <div className="h-full rounded-full bg-glow" style={{ width: `${(r.total_kg / maxKg) * 100}%` }} />
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]">
+                    <div className="h-full rounded-full bg-accent" style={{ width: `${(r.total_kg / maxKg) * 100}%` }} />
                   </div>
                   <p className="mt-1.5 text-[11px] text-muted">
                     📄 {formatNumber(r.paper_kg, 1)} kg · 🧴 {formatNumber(r.plastic_kg, 1)} kg · {r.entries} ta yozuv
@@ -356,7 +356,7 @@ export default function AdminRecyclingPage() {
             visible.map((e) => {
               const m = MATERIALS[e.material] ?? MATERIALS.paper;
               return (
-                <div key={e.id} className="flex items-center gap-3 rounded-2xl bg-white/[0.03] p-3 ring-1 ring-line">
+                <div key={e.id} className="flex items-center gap-3 rounded-2xl bg-ink/[0.03] p-3 ring-1 ring-line">
                   <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-lg ${m.tint}`}>{m.icon}</span>
                   <div className="min-w-0 flex-1">
                     <p className="font-extrabold">
@@ -389,7 +389,7 @@ export default function AdminRecyclingPage() {
           <p className="mt-1 text-sm text-muted">O‘quvchilar endi recycling yubormaydi. Qolganlarini tasdiqlang yoki rad eting.</p>
           <div className="mt-4 space-y-2">
             {oldPending.map((e) => (
-              <div key={e.id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white/[0.03] p-3 ring-1 ring-line">
+              <div key={e.id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-ink/[0.03] p-3 ring-1 ring-line">
                 <span className="text-xl">{MATERIALS[e.material]?.icon}</span>
                 <div className="min-w-0 flex-1">
                   <p className="font-extrabold">{e.profiles?.full_name || "O‘quvchi"} · {e.amount_kg} kg</p>

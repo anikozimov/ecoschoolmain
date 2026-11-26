@@ -138,3 +138,39 @@ Domen Cloudflare'da bo‘lsa, DNS avtomatik sozlanadi. Keyin Supabase'dagi **Sit
   | Admin | Hammasini boshqaradi; mentor tayinlaydi |
   | 👑 Bosh admin | Admin kabi + adminlarni tayinlaydi/oladi. Faqat SQL Editor'dan tayinlanadi; sayt orqali uni hech kim adminlikdan ololmaydi, o‘chira olmaydi, parolini o‘zgartira olmaydi |
 - Ichki email domeni `ecoschool.uz` (o‘zgartirish: `NEXT_PUBLIC_LOGIN_DOMAIN` build o‘zgaruvchisi). Uni keyin almashtirmang — eski loginlar ishlamay qoladi.
+
+## Yangi bo‘limlar (2026-noyabr): o‘yin, recycling partiyalari, Green Flag
+
+Supabase → SQL Editor’da **`supabase/migrations/20261126_eco_platform.sql`** ni bir marta ishga tushiring (qayta ishga tushirsa ham zarar qilmaydi).
+
+| Bo‘lim | Saytda | Adminda |
+|---|---|---|
+| Eco Level (XP) va yutuqlar | Profil | — |
+| EcoCoin va EcoShop | `/shop` | `/admin/shop` — buyurtmalar, mahsulotlar |
+| Eco Liga (oylik sinflar turniri) | `/league` | — |
+| Recycling kalkulyatori, partiyalar (6 bosqich), Eco Fund ovozi | `/recycling` | `/admin/batches` — partiya, kvitansiya, loyihalar, narxlar |
+| Green Flag: 7 qadam, maqsadlar, Eco Committee, Action Plan, Eco-Code | `/green-flag` | `/admin/greenflag` |
+| Green Flag portfolio (PDF) | — | `/admin/report` |
+| O‘quvchi sertifikati (PDF) | `/certificate` | `/certificate?id=<o‘quvchi id>` |
+
+- XP — daraja, hech qachon kamaymaydi. EcoCoin = XP − do‘konda sarflangan. Rad etilgan buyurtma tangalarni qaytaradi.
+- Maqsadlardagi “avto” qiymatlar saytdan o‘zi hisoblanadi (faol o‘quvchilar %, faol sinflar %, qog‘oz/plastik kg, tadqiqotlar soni).
+- PDF: “Chop etish” → “PDF sifatida saqlash”.
+
+## Volontyorlar va “Timo dunyosi” o‘yini
+
+SQL: **`supabase/migrations/20261127_volunteers_game.sql`** (oldin `20261126_eco_platform.sql`, keyin shu).
+
+- **Volontyor roli.** Admin → Foydalanuvchilar → odamni tanlang → Rol: “Volontyor”. Volontyor `/volunteer` sahifasida ishini, sanasini, soatini va rasmini yuboradi. Admin `/admin/volunteers`da tekshiradi: soatni kamaytirishi, 0–100 ball berishi, izoh yozishi mumkin. Volontyorlar o‘quvchilar reytingida qatnashmaydi, o‘z reytingi bor (tasdiqlangan soat bo‘yicha). Sertifikatda volontyor soati yoziladi, Green Flag hisobotida jami soat chiqadi.
+- **Timo dunyosi** (`/game`). Tushayotgan chiqindini 4 qutiga saralash o‘yini; ochko oshgani sari olam tozarib, yashnaydi. Eng yaxshi natija va maktab top-10 saqlanadi. Kuniga 1 marta: har 100 ochkoga +1 eco ball (ko‘pi bilan 10).
+
+## Volontyorlar, Timo bog'i va yangi dizayn (2026-noyabr oxiri)
+
+SQL (tartib bilan, qayta ishga tushirish xavfsiz):
+1. `supabase/migrations/20261127_volunteers_game.sql` — volontyor roli va Timo o'yini
+2. `supabase/migrations/20261128_timo_garden.sql` — Timo bog'i
+
+- **Volontyor:** admin "Foydalanuvchilar"da rol beradi → volontyor `/volunteer` da ish + soat yuboradi → admin `/admin/volunteers` da tekshiradi (soatni kamaytirishi, ball berishi mumkin).
+- **Timo bog'i** (`/timo`): tasdiqlangan ishlar (challenge + tadqiqot + volontyorlik) soniga qarab bog' o'sadi: 1 — gullar, 3 — kapalaklar, 5 — Timo uyi, 7 — qushlar, 10 — daraxt, 15 — hovuz, 20 — Yashil vodiy, 25 — shamol generatori, 30 — o'rmon, 40 — Tog' etagi, 50 — kamalak. Hech narsa yo'qolmaydi.
+- Timo kiyimlari darajaga qarab ochiladi (server tekshiradi). Har sahifada kichik Timo yordamchi bor.
+- Yangi shriftlar: `package.json` o'zgardi — GitHub'ga u ham yuklanishi kerak.

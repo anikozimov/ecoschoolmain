@@ -183,7 +183,7 @@ export function ScrollProgress() {
     <div
       ref={ref}
       aria-hidden
-      className="fixed left-0 right-0 top-0 z-[60] h-[3px] origin-left scale-x-0 bg-gradient-to-r from-forest-500 via-leaf-400 to-sand-400"
+      className="fixed left-0 right-0 top-0 z-[60] h-[3px] origin-left scale-x-0 bg-gradient-to-r from-forest-500 via-forest-500 to-[#e2a63a]"
     />
   );
 }

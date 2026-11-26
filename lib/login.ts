@@ -38,5 +38,6 @@ export function usernameError(value: string): string | null {
 export const ROLE_LABEL: Record<string, string> = {
   admin: "Admin",
   mentor: "Tekshiruvchi",
+  volunteer: "Volontyor",
   student: "O‘quvchi",
 };

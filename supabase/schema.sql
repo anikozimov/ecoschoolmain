@@ -1050,6 +1050,708 @@ create policy eco_mentor_photos_update on storage.objects for update to authenti
 create policy eco_mentor_photos_delete on storage.objects for delete to authenticated
   using (bucket_id = 'mentor-photos' and public.is_admin());
 
+
+-- ───────────────────────────── 12. O'YIN, RECYCLING PARTIYALARI, GREEN FLAG ─────────────────────────────
+
+-- ── Umumiy: yozuvga maktabni avtomatik qo'yish ──
+create or replace function public.set_school_id()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.school_id is null then
+    new.school_id := public.my_school_id();
+  end if;
+  if new.school_id is null and (select count(*) from public.schools) = 1 then
+    select id into new.school_id from public.schools limit 1;
+  end if;
+  -- Admin boshqa maktab yozuvini o'zgartira olmasin (bitta maktab bo'lsa ham xavfsiz)
+  if tg_op = 'UPDATE' then
+    new.school_id := old.school_id;
+  end if;
+  return new;
+end $$;
+
+-- ═════════ 1. ECOSHOP ═════════
+create table if not exists public.shop_items (
+  id          bigint generated always as identity primary key,
+  school_id   bigint references public.schools(id) on delete cascade,
+  title       text not null check (char_length(trim(title)) between 2 and 80),
+  description text check (description is null or char_length(description) <= 300),
+  icon        text not null default '🎁' check (char_length(icon) <= 16),
+  price       integer not null check (price between 1 and 100000),
+  stock       integer check (stock is null or stock >= 0),
+  for_class   boolean not null default false,
+  active      boolean not null default true,
+  sort_order  integer not null default 0,
+  created_at  timestamptz not null default now()
+);
+
+create table if not exists public.shop_orders (
+  id          bigint generated always as identity primary key,
+  school_id   bigint references public.schools(id) on delete cascade,
+  item_id     bigint references public.shop_items(id) on delete set null,
+  item_title  text not null,
+  student_id  uuid not null references public.profiles(id) on delete cascade,
+  price       integer not null check (price > 0),
+  status      text not null default 'pending' check (status in ('pending', 'delivered', 'rejected')),
+  created_at  timestamptz not null default now(),
+  handled_at  timestamptz
+);
+create index if not exists shop_orders_student_idx on public.shop_orders (student_id);
+
+drop trigger if exists shop_items_school on public.shop_items;
+create trigger shop_items_school before insert or update on public.shop_items
+  for each row execute function public.set_school_id();
+
+-- Hamyon: XP (daraja uchun) va EcoCoin (do'kon uchun) alohida
+create or replace function public.my_wallet()
+returns table (xp integer, earned integer, spent integer, balance integer)
+language sql stable security definer set search_path = public as $$
+  with p as (select coalesce(points, 0) as pts from public.profiles where id = auth.uid()),
+       s as (select coalesce(sum(price), 0)::int as sp from public.shop_orders
+             where student_id = auth.uid() and status <> 'rejected')
+  select p.pts, p.pts, s.sp, greatest(p.pts - s.sp, 0) from p, s;
+$$;
+
+create or replace function public.buy_shop_item(p_item bigint)
+returns bigint language plpgsql security definer set search_path = public as $$
+declare
+  v_uid   uuid := auth.uid();
+  v_pts   integer;
+  v_sch   bigint;
+  v_spent integer;
+  it      public.shop_items;
+  v_id    bigint;
+begin
+  if v_uid is null then raise exception 'Avval tizimga kiring' using errcode = '42501'; end if;
+  -- Bir vaqtdagi ikki xaridni ketma-ket qilish uchun profilni qulflaymiz
+  select coalesce(points, 0), school_id into v_pts, v_sch from public.profiles where id = v_uid for update;
+  select * into it from public.shop_items where id = p_item for update;
+  if not found or not it.active then raise exception 'Mahsulot topilmadi'; end if;
+  if it.school_id is not null and it.school_id is distinct from v_sch then raise exception 'Mahsulot topilmadi'; end if;
+  if it.stock is not null and it.stock <= 0 then raise exception 'Mahsulot tugagan'; end if;
+  select coalesce(sum(price), 0) into v_spent from public.shop_orders where student_id = v_uid and status <> 'rejected';
+  if v_pts - v_spent < it.price then raise exception 'EcoCoin yetarli emas'; end if;
+  insert into public.shop_orders (school_id, item_id, item_title, student_id, price)
+  values (coalesce(it.school_id, v_sch), it.id, it.title, v_uid, it.price) returning id into v_id;
+  if it.stock is not null then
+    update public.shop_items set stock = stock - 1 where id = it.id;
+  end if;
+  return v_id;
+end $$;
+
+-- Rad etilgan buyurtma: tanga qaytadi (spent hisobidan chiqadi), qoldiq ham qaytadi
+create or replace function public.shop_order_status()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.status is distinct from old.status then
+    new.handled_at := now();
+    if new.status = 'rejected' and old.status <> 'rejected' and new.item_id is not null then
+      update public.shop_items set stock = stock + 1 where id = new.item_id and stock is not null;
+    elsif old.status = 'rejected' and new.status <> 'rejected' then
+      raise exception 'Rad etilgan buyurtmani qayta tiklab bo''lmaydi';
+    end if;
+  end if;
+  -- Narx, mahsulot va egasini o'zgartirib bo'lmaydi
+  new.price := old.price; new.student_id := old.student_id; new.item_id := old.item_id;
+  new.item_title := old.item_title; new.school_id := old.school_id;
+  return new;
+end $$;
+drop trigger if exists shop_order_status on public.shop_orders;
+create trigger shop_order_status before update on public.shop_orders
+  for each row execute function public.shop_order_status();
+
+-- ═════════ 2. ECO LEAGUE ═════════
+create or replace function public.get_league(p_month date default current_date)
+returns table (class_name text, students bigint, points bigint, per_student numeric,
+               recycling_kg numeric, challenges bigint, research bigint)
+language sql stable security definer set search_path = public as $$
+  with sid as (select public.my_school_id() as id),
+  rng as (select date_trunc('month', p_month)::timestamptz as a,
+                 (date_trunc('month', p_month) + interval '1 month')::timestamptz as b),
+  cls as (
+    select c.class_name as cn from public.school_classes c, sid where c.school_id = sid.id
+    union
+    select p.class_name from public.profiles p, sid
+    where p.school_id = sid.id and p.role = 'student' and coalesce(p.class_name, '') <> ''
+  ),
+  st as (
+    select p.class_name as cn, count(*) as n from public.profiles p, sid
+    where p.school_id = sid.id and p.role = 'student' group by 1
+  ),
+  ch as (
+    select q.class_name as cn, count(*) as n, sum(cs.awarded_points) as pts
+    from public.challenge_submissions cs join public.profiles q on q.id = cs.student_id, sid, rng
+    where cs.status = 'approved' and q.school_id = sid.id and cs.reviewed_at >= rng.a and cs.reviewed_at < rng.b
+    group by 1
+  ),
+  rs as (
+    select q.class_name as cn, count(*) as n, sum(r.awarded_points) as pts
+    from public.eco_research r join public.profiles q on q.id = r.student_id, sid, rng
+    where r.status = 'published' and q.school_id = sid.id and r.reviewed_at >= rng.a and r.reviewed_at < rng.b
+    group by 1
+  ),
+  rc as (
+    select coalesce(r.class_name, q.class_name) as cn,
+           sum(coalesce(r.verified_amount_kg, r.amount_kg)) as kg, sum(r.awarded_points) as pts
+    from public.recycling_submissions r left join public.profiles q on q.id = r.student_id, sid, rng
+    where r.status = 'approved' and r.school_id = sid.id
+      and coalesce(r.reviewed_at, r.submitted_at) >= rng.a and coalesce(r.reviewed_at, r.submitted_at) < rng.b
+    group by 1
+  )
+  select cls.cn,
+         coalesce(st.n, 0)::bigint,
+         (coalesce(ch.pts, 0) + coalesce(rs.pts, 0) + coalesce(rc.pts, 0))::bigint as total,
+         round((coalesce(ch.pts, 0) + coalesce(rs.pts, 0) + coalesce(rc.pts, 0))::numeric / greatest(coalesce(st.n, 0), 1), 1),
+         coalesce(rc.kg, 0),
+         coalesce(ch.n, 0)::bigint,
+         coalesce(rs.n, 0)::bigint
+  from cls
+  left join st on st.cn = cls.cn
+  left join ch on ch.cn = cls.cn
+  left join rs on rs.cn = cls.cn
+  left join rc on rc.cn = cls.cn
+  where auth.uid() is not null
+  order by 3 desc, 1;
+$$;
+
+-- ═════════ 3. RECYCLING PARTIYALARI VA ECO FUND ═════════
+create table if not exists public.recycling_batches (
+  id          bigint generated always as identity primary key,
+  school_id   bigint references public.schools(id) on delete cascade,
+  title       text not null check (char_length(trim(title)) between 2 and 120),
+  paper_kg    numeric(8,2) not null default 0 check (paper_kg between 0 and 100000),
+  plastic_kg  numeric(8,2) not null default 0 check (plastic_kg between 0 and 100000),
+  stage       smallint not null default 1 check (stage between 1 and 6),
+  income      bigint not null default 0 check (income between 0 and 1000000000),
+  receipt_url text check (receipt_url is null or (char_length(receipt_url) <= 500 and receipt_url ~ '^https://')),
+  note        text check (note is null or char_length(note) <= 500),
+  history     jsonb not null default '[]'::jsonb,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create or replace function public.batch_history()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    new.history := jsonb_build_array(jsonb_build_object('stage', new.stage, 'at', now()));
+  elsif new.stage is distinct from old.stage then
+    new.history := coalesce(old.history, '[]'::jsonb) || jsonb_build_object('stage', new.stage, 'at', now());
+  else
+    new.history := old.history;
+  end if;
+  new.updated_at := now();
+  return new;
+end $$;
+drop trigger if exists batches_school on public.recycling_batches;
+create trigger batches_school before insert or update on public.recycling_batches
+  for each row execute function public.set_school_id();
+drop trigger if exists batches_history on public.recycling_batches;
+create trigger batches_history before insert or update on public.recycling_batches
+  for each row execute function public.batch_history();
+
+create table if not exists public.fund_projects (
+  id          bigint generated always as identity primary key,
+  school_id   bigint references public.schools(id) on delete cascade,
+  title       text not null check (char_length(trim(title)) between 2 and 120),
+  description text check (description is null or char_length(description) <= 400),
+  active      boolean not null default true,
+  created_at  timestamptz not null default now()
+);
+drop trigger if exists fund_projects_school on public.fund_projects;
+create trigger fund_projects_school before insert or update on public.fund_projects
+  for each row execute function public.set_school_id();
+
+-- Har bir o'quvchining bitta ovozi (fikrini o'zgartirishi mumkin)
+create table if not exists public.fund_votes (
+  student_id  uuid primary key references public.profiles(id) on delete cascade,
+  project_id  bigint not null references public.fund_projects(id) on delete cascade,
+  voted_at    timestamptz not null default now()
+);
+
+create or replace function public.get_fund_summary()
+returns table (project_id bigint, title text, description text, votes bigint, mine boolean)
+language sql stable security definer set search_path = public as $$
+  select fp.id, fp.title, fp.description,
+         (select count(*) from public.fund_votes v where v.project_id = fp.id),
+         exists (select 1 from public.fund_votes v where v.project_id = fp.id and v.student_id = auth.uid())
+  from public.fund_projects fp
+  where auth.uid() is not null and fp.active and fp.school_id = public.my_school_id()
+  order by 4 desc, fp.id;
+$$;
+
+create or replace function public.vote_fund_project(p_project bigint)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Avval tizimga kiring' using errcode = '42501'; end if;
+  if not exists (select 1 from public.fund_projects
+                 where id = p_project and active and school_id = public.my_school_id()) then
+    raise exception 'Loyiha topilmadi';
+  end if;
+  insert into public.fund_votes (student_id, project_id) values (auth.uid(), p_project)
+  on conflict (student_id) do update set project_id = excluded.project_id, voted_at = now();
+end $$;
+
+create or replace function public.admin_reset_fund_votes()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'Ruxsat yo''q' using errcode = '42501'; end if;
+  delete from public.fund_votes v using public.fund_projects fp
+  where fp.id = v.project_id and fp.school_id = public.my_school_id();
+end $$;
+
+-- Kvitansiya rasmlari: ochiq (o'quvchilar ko'radi), yuklash faqat admin
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types) values
+  ('batch-receipts', 'batch-receipts', true, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = true,
+  file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+drop policy if exists eco_receipts_insert on storage.objects;
+drop policy if exists eco_receipts_delete on storage.objects;
+create policy eco_receipts_insert on storage.objects for insert to authenticated
+  with check (bucket_id = 'batch-receipts' and public.is_admin());
+create policy eco_receipts_delete on storage.objects for delete to authenticated
+  using (bucket_id = 'batch-receipts' and public.is_admin());
+
+-- ═════════ 4. GREEN FLAG ═════════
+create table if not exists public.eco_goals (
+  id          bigint generated always as identity primary key,
+  school_id   bigint references public.schools(id) on delete cascade,
+  title       text not null check (char_length(trim(title)) between 2 and 120),
+  unit        text not null default '' check (char_length(unit) <= 20),
+  target      numeric(12,2) not null default 0 check (target >= 0),
+  current     numeric(12,2) not null default 0 check (current >= 0),
+  auto        text check (auto is null or auto in ('active_pct', 'classes_pct', 'paper_kg', 'plastic_kg', 'research')),
+  sort_order  integer not null default 0
+);
+drop trigger if exists goals_school on public.eco_goals;
+create trigger goals_school before insert or update on public.eco_goals
+  for each row execute function public.set_school_id();
+
+create or replace function public.get_goal_auto()
+returns table (active_pct numeric, classes_pct numeric, paper_kg numeric, plastic_kg numeric, research bigint)
+language sql stable security definer set search_path = public as $$
+  with sid as (select public.my_school_id() as id),
+  stu as (select p.id, p.points, p.class_name from public.profiles p, sid where p.school_id = sid.id and p.role = 'student'),
+  cls as (select c.class_name from public.school_classes c, sid where c.school_id = sid.id),
+  rec as (
+    select r.material, coalesce(r.class_name, q.class_name) as cn, coalesce(r.verified_amount_kg, r.amount_kg) as kg
+    from public.recycling_submissions r left join public.profiles q on q.id = r.student_id, sid
+    where r.status = 'approved' and r.school_id = sid.id
+  ),
+  activec as (
+    select distinct class_name as cn from stu where points > 0
+    union select distinct cn from rec where cn is not null
+  )
+  select
+    round(100.0 * (select count(*) from stu where points > 0) / greatest((select count(*) from stu), 1), 1),
+    round(100.0 * (select count(*) from cls where class_name in (select cn from activec)) / greatest((select count(*) from cls), 1), 1),
+    coalesce((select sum(kg) from rec where material = 'paper'), 0),
+    coalesce((select sum(kg) from rec where material = 'plastic'), 0),
+    (select count(*) from public.eco_research r join stu on stu.id = r.student_id where r.status = 'published')
+  where auth.uid() is not null;
+$$;
+
+create table if not exists public.committee_members (
+  id          bigint generated always as identity primary key,
+  school_id   bigint references public.schools(id) on delete cascade,
+  full_name   text not null check (char_length(trim(full_name)) between 2 and 80),
+  role_title  text check (role_title is null or char_length(role_title) <= 80),
+  class_name  text check (class_name is null or char_length(class_name) <= 20),
+  sort_order  integer not null default 0
+);
+create table if not exists public.committee_meetings (
+  id          bigint generated always as identity primary key,
+  school_id   bigint references public.schools(id) on delete cascade,
+  meet_date   date not null,
+  title       text not null check (char_length(trim(title)) between 2 and 160),
+  minutes     text check (minutes is null or char_length(minutes) <= 5000),
+  decisions   text check (decisions is null or char_length(decisions) <= 3000)
+);
+create table if not exists public.action_tasks (
+  id          bigint generated always as identity primary key,
+  school_id   bigint references public.schools(id) on delete cascade,
+  step        text not null default 'action' check (step in ('committee', 'review', 'curriculum', 'action', 'monitoring', 'inform', 'ecocode')),
+  title       text not null check (char_length(trim(title)) between 2 and 200),
+  owner_name  text check (owner_name is null or char_length(owner_name) <= 80),
+  deadline    date,
+  status      text not null default 'todo' check (status in ('todo', 'doing', 'done')),
+  created_at  timestamptz not null default now()
+);
+drop trigger if exists cm_school on public.committee_members;
+create trigger cm_school before insert or update on public.committee_members for each row execute function public.set_school_id();
+drop trigger if exists cmt_school on public.committee_meetings;
+create trigger cmt_school before insert or update on public.committee_meetings for each row execute function public.set_school_id();
+drop trigger if exists at_school on public.action_tasks;
+create trigger at_school before insert or update on public.action_tasks for each row execute function public.set_school_id();
+
+-- ═════════ RUXSATLAR (RLS) ═════════
+do $$
+declare t text;
+begin
+  foreach t in array array['shop_items', 'recycling_batches', 'fund_projects', 'eco_goals',
+                           'committee_members', 'committee_meetings', 'action_tasks'] loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('drop policy if exists eco_%s_read on public.%I', t, t);
+    execute format('drop policy if exists eco_%s_admin on public.%I', t, t);
+    execute format('create policy eco_%s_read on public.%I for select to authenticated using (school_id = public.my_school_id() or public.is_admin())', t, t);
+    execute format('create policy eco_%s_admin on public.%I for all to authenticated using (public.is_admin()) with check (public.is_admin())', t, t);
+    execute format('grant select, insert, update, delete on public.%I to authenticated', t);
+  end loop;
+end $$;
+
+alter table public.shop_orders enable row level security;
+drop policy if exists eco_orders_own on public.shop_orders;
+drop policy if exists eco_orders_admin on public.shop_orders;
+create policy eco_orders_own on public.shop_orders for select to authenticated using (student_id = auth.uid());
+create policy eco_orders_admin on public.shop_orders for all to authenticated using (public.is_admin()) with check (public.is_admin());
+grant select, update, delete on public.shop_orders to authenticated;
+
+alter table public.fund_votes enable row level security;
+drop policy if exists eco_votes_own on public.fund_votes;
+create policy eco_votes_own on public.fund_votes for select to authenticated using (student_id = auth.uid());
+grant select on public.fund_votes to authenticated;
+
+revoke all on function public.set_school_id(), public.batch_history(), public.shop_order_status() from public, anon, authenticated;
+revoke all on function public.my_wallet(), public.buy_shop_item(bigint), public.get_league(date), public.get_fund_summary(),
+  public.vote_fund_project(bigint), public.admin_reset_fund_votes(), public.get_goal_auto() from public, anon;
+grant execute on function public.my_wallet(), public.buy_shop_item(bigint), public.get_league(date), public.get_fund_summary(),
+  public.vote_fund_project(bigint), public.admin_reset_fund_votes(), public.get_goal_auto() to authenticated;
+
+-- ═════════ BOSHLANG'ICH MA'LUMOT (faqat bo'sh bo'lsa) ═════════
+insert into public.shop_items (school_id, title, description, icon, price, for_class, sort_order)
+select s.id, x.t, x.d, x.i, x.p, x.c, x.o
+from public.schools s
+cross join (values
+  ('Eco Hero nishoni', 'Profilingizga maxsus nishon', '🏅', 100, false, 1),
+  ('Timo profil bezagi', 'Timo bilan profil ramkasi', '🐢', 150, false, 2),
+  ('Ekologik bloknot', 'Qayta ishlangan qog‘ozdan', '📒', 300, false, 3),
+  ('Kitob', 'Tabiat haqida kitob', '📚', 500, false, 4),
+  ('Sinf uchun o‘simlik', 'Sinf xonasiga gul', '🌱', 600, true, 5),
+  ('Sinf uchun kubok', 'Eng faol sinfga', '🏆', 1500, true, 6)
+) as x(t, d, i, p, c, o)
+where s.code = 'ECOIXMI' and not exists (select 1 from public.shop_items);
+
+insert into public.eco_goals (school_id, title, unit, target, auto, sort_order)
+select s.id, x.t, x.u, x.v, x.a, x.o
+from public.schools s
+cross join (values
+  ('Faol o‘quvchilar', '%', 70, 'active_pct', 1),
+  ('Ishtirok etuvchi sinflar', '%', 100, 'classes_pct', 2),
+  ('Qog‘oz recycling', 'kg', 500, 'paper_kg', 3),
+  ('Plastik recycling', 'kg', 200, 'plastic_kg', 4),
+  ('Aralash chiqindilarni kamaytirish', '%', 30, null, 5),
+  ('Elektr sarfini kamaytirish', '%', 10, null, 6),
+  ('Ekologik tadqiqotlar', 'ta', 15, 'research', 7),
+  ('Fanlarga integratsiya', 'fan', 5, null, 8),
+  ('Hamkor tashkilotlar', 'ta', 3, null, 9),
+  ('Eco Committee yig‘ilishlari', 'ta', 9, null, 10),
+  ('O‘quvchilar tashabbuslari', 'ta', 20, null, 11)
+) as x(t, u, v, a, o)
+where s.code = 'ECOIXMI' and not exists (select 1 from public.eco_goals);
+
+
+-- ───────────────────────────── 13. VOLONTYORLAR, TIMO DUNYOSI O'YINI ─────────────────────────────
+-- ═════════ 1. VOLONTYOR ROLI ═════════
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles add constraint profiles_role_check
+  check (role in ('student', 'mentor', 'admin', 'volunteer'));
+
+create or replace function public.is_volunteer()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and role = 'volunteer');
+$$;
+
+create table if not exists public.volunteer_logs (
+  id                bigint generated always as identity primary key,
+  student_id        uuid not null default auth.uid() references public.profiles(id) on delete cascade,
+  school_id         bigint references public.schools(id) on delete cascade,
+  work_date         date not null default current_date,
+  title             text not null check (char_length(trim(title)) between 3 and 160),
+  description       text check (description is null or char_length(description) <= 2000),
+  hours             numeric(5,2) not null check (hours > 0 and hours <= 12),
+  approved_hours    numeric(5,2) check (approved_hours is null or (approved_hours >= 0 and approved_hours <= 12)),
+  proof_url         text check (proof_url is null or char_length(proof_url) <= 300),
+  status            text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  awarded_points    integer not null default 0 check (awarded_points between 0 and 100),
+  reviewer_feedback text check (reviewer_feedback is null or char_length(reviewer_feedback) <= 1000),
+  reviewed_by       uuid references public.profiles(id) on delete set null,
+  reviewed_at       timestamptz,
+  submitted_at      timestamptz not null default now()
+);
+create index if not exists volunteer_logs_student_idx on public.volunteer_logs (student_id);
+create index if not exists volunteer_logs_status_idx on public.volunteer_logs (status);
+
+-- Yozish qoidalari: volontyor faqat "kutilmoqda" holatida, o'z nomidan yozadi
+create or replace function public.prepare_volunteer_log()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'UPDATE' then
+    new.student_id := old.student_id;
+    new.school_id  := old.school_id;
+    new.submitted_at := old.submitted_at;
+  end if;
+
+  if not public.is_admin() then
+    if tg_op = 'INSERT' then
+      if not public.is_volunteer() then
+        raise exception 'Faqat volontyorlar ish soatini yubora oladi' using errcode = '42501';
+      end if;
+      new.student_id := auth.uid();
+      new.school_id  := public.my_school_id();
+      new.submitted_at := now();
+    elsif old.status <> 'pending' then
+      raise exception 'Tekshirilgan yozuvni o''zgartirib bo''lmaydi' using errcode = '42501';
+    end if;
+    if new.work_date > current_date then
+      raise exception 'Kelajakdagi sana kiritib bo''lmaydi';
+    end if;
+    new.status := 'pending';
+    new.awarded_points := 0;
+    new.approved_hours := null;
+    new.reviewer_feedback := null;
+    new.reviewed_by := null;
+    new.reviewed_at := null;
+    return new;
+  end if;
+
+  -- Admin
+  if new.school_id is null then
+    new.school_id := (select school_id from public.profiles where id = new.student_id);
+  end if;
+  if new.status = 'approved' then
+    new.approved_hours := least(new.hours, coalesce(new.approved_hours, new.hours));
+    new.awarded_points := least(100, greatest(0, coalesce(new.awarded_points, 0)));
+  else
+    new.approved_hours := null;
+    new.awarded_points := 0;
+  end if;
+  if tg_op = 'INSERT' or new.status is distinct from old.status then
+    new.reviewed_at := case when new.status = 'pending' then null else now() end;
+    new.reviewed_by := case when new.status = 'pending' then null else auth.uid() end;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists prepare_volunteer on public.volunteer_logs;
+create trigger prepare_volunteer before insert or update on public.volunteer_logs
+  for each row execute function public.prepare_volunteer_log();
+-- Ball profilga mavjud umumiy funksiya orqali yoziladi (tasdiq/qaytarish/o'chirish)
+drop trigger if exists sync_points on public.volunteer_logs;
+create trigger sync_points after insert or update or delete on public.volunteer_logs
+  for each row execute function public.sync_points();
+
+alter table public.volunteer_logs enable row level security;
+drop policy if exists eco_vol_own_read on public.volunteer_logs;
+drop policy if exists eco_vol_own_insert on public.volunteer_logs;
+drop policy if exists eco_vol_own_update on public.volunteer_logs;
+drop policy if exists eco_vol_own_delete on public.volunteer_logs;
+drop policy if exists eco_vol_admin on public.volunteer_logs;
+create policy eco_vol_own_read on public.volunteer_logs for select to authenticated
+  using (student_id = auth.uid() or public.is_admin());
+create policy eco_vol_own_insert on public.volunteer_logs for insert to authenticated
+  with check (student_id = auth.uid() and public.is_volunteer());
+create policy eco_vol_own_update on public.volunteer_logs for update to authenticated
+  using (student_id = auth.uid() and status = 'pending') with check (student_id = auth.uid());
+create policy eco_vol_own_delete on public.volunteer_logs for delete to authenticated
+  using (student_id = auth.uid() and status = 'pending');
+create policy eco_vol_admin on public.volunteer_logs for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+grant select, insert, update, delete on public.volunteer_logs to authenticated;
+
+-- Ish rasmlari (yopiq papka: faqat egasi va admin ko'radi)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types) values
+  ('volunteer-proofs', 'volunteer-proofs', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = false,
+  file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists eco_vol_proofs_insert on storage.objects;
+drop policy if exists eco_vol_proofs_read on storage.objects;
+drop policy if exists eco_vol_proofs_delete on storage.objects;
+create policy eco_vol_proofs_insert on storage.objects for insert to authenticated
+  with check (bucket_id = 'volunteer-proofs' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy eco_vol_proofs_read on storage.objects for select to authenticated
+  using (bucket_id = 'volunteer-proofs' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+create policy eco_vol_proofs_delete on storage.objects for delete to authenticated
+  using (bucket_id = 'volunteer-proofs' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+
+-- Volontyorlar reytingi (faqat tasdiqlangan soatlar)
+create or replace function public.get_volunteer_board()
+returns table (student_id uuid, full_name text, hours numeric, entries bigint, points bigint)
+language sql stable security definer set search_path = public as $$
+  select p.id, p.full_name,
+         coalesce(sum(v.approved_hours), 0),
+         count(v.id),
+         coalesce(sum(v.awarded_points), 0)::bigint
+  from public.profiles p
+  left join public.volunteer_logs v on v.student_id = p.id and v.status = 'approved'
+  where p.role = 'volunteer'
+    and (p.school_id = public.my_school_id() or public.my_school_id() is null)
+    and auth.uid() is not null
+  group by p.id, p.full_name
+  order by 3 desc, 2;
+$$;
+
+-- Bitta volontyorning jami tasdiqlangan soati (profil va sertifikat uchun)
+create or replace function public.my_volunteer_hours(p_user uuid default null)
+returns numeric language sql stable security definer set search_path = public as $$
+  select coalesce(sum(approved_hours), 0) from public.volunteer_logs
+  where status = 'approved'
+    and student_id = coalesce(p_user, auth.uid())
+    and (coalesce(p_user, auth.uid()) = auth.uid() or public.is_staff());
+$$;
+
+-- ═════════ 2. TIMO DUNYOSI O'YINI ═════════
+create table if not exists public.game_scores (
+  student_id       uuid primary key references public.profiles(id) on delete cascade,
+  best             integer not null default 0 check (best between 0 and 100000),
+  plays            integer not null default 0,
+  last_reward_date date,
+  updated_at       timestamptz not null default now()
+);
+alter table public.game_scores enable row level security;
+drop policy if exists eco_game_own on public.game_scores;
+create policy eco_game_own on public.game_scores for select to authenticated using (student_id = auth.uid());
+grant select on public.game_scores to authenticated;
+
+-- O'yin natijasini saqlash. Qaytaradi: eng yaxshi natija, bugungi mukofot (0 — berilmagan)
+create or replace function public.submit_game_score(p_score integer)
+returns table (best integer, reward integer, rewarded_today boolean)
+language plpgsql security definer set search_path = public as $$
+declare
+  v_score  integer := least(greatest(coalesce(p_score, 0), 0), 20000);
+  v_reward integer := 0;
+  v_row    public.game_scores;
+begin
+  if auth.uid() is null then
+    raise exception 'Avval kiring' using errcode = '42501';
+  end if;
+
+  insert into public.game_scores (student_id) values (auth.uid()) on conflict (student_id) do nothing;
+  select * into v_row from public.game_scores where student_id = auth.uid() for update;
+
+  -- Kuniga bir marta: 100 ochkoga 1 ball, ko'pi bilan 10 ball (kamida 100 ochko kerak)
+  if v_score >= 100 and (v_row.last_reward_date is null or v_row.last_reward_date < current_date) then
+    v_reward := least(10, v_score / 100);
+  end if;
+
+  update public.game_scores g
+     set best = greatest(g.best, v_score),
+         plays = g.plays + 1,
+         last_reward_date = case when v_reward > 0 then current_date else g.last_reward_date end,
+         updated_at = now()
+   where g.student_id = auth.uid()
+  returning * into v_row;
+
+  if v_reward > 0 then
+    perform set_config('eco.points_sync', '1', true);
+    update public.profiles set points = points + v_reward where id = auth.uid();
+    perform set_config('eco.points_sync', '', true);
+  end if;
+
+  return query select v_row.best, v_reward, (v_row.last_reward_date = current_date);
+end $$;
+
+-- Maktab bo'yicha eng yaxshi o'yinchilar
+create or replace function public.get_game_top()
+returns table (student_id uuid, full_name text, class_name text, best integer)
+language sql stable security definer set search_path = public as $$
+  select p.id, p.full_name, p.class_name, g.best
+  from public.game_scores g
+  join public.profiles p on p.id = g.student_id
+  where g.best > 0
+    and auth.uid() is not null
+    and (p.school_id = public.my_school_id() or public.my_school_id() is null)
+  order by g.best desc, g.updated_at
+  limit 10;
+$$;
+
+revoke all on function public.is_volunteer(), public.get_volunteer_board(), public.my_volunteer_hours(uuid),
+  public.submit_game_score(integer), public.get_game_top() from public, anon;
+grant execute on function public.is_volunteer(), public.get_volunteer_board(), public.my_volunteer_hours(uuid),
+  public.submit_game_score(integer), public.get_game_top() to authenticated;
+
+-- ───────────────────────────── 14. TIMO: SHAXSIY YORDAMCHI VA VIRTUAL BOG' ─────────────────────────────
+
+
+create table if not exists public.timo_profiles (
+  student_id uuid primary key default auth.uid() references public.profiles(id) on delete cascade,
+  outfit     text not null default 'none' check (outfit in ('none', 'leaf', 'cap', 'explorer', 'grad', 'crown')),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.timo_profiles enable row level security;
+drop policy if exists eco_timo_own on public.timo_profiles;
+create policy eco_timo_own on public.timo_profiles for select to authenticated using (student_id = auth.uid());
+-- Yozish faqat set_timo_outfit() orqali (to'g'ridan-to'g'ri insert/update yo'q)
+revoke insert, update, delete on public.timo_profiles from authenticated, anon;
+grant select on public.timo_profiles to authenticated;
+
+-- Kiyim uchun kerakli XP (lib/timo.ts bilan bir xil)
+create or replace function public.timo_outfit_min(p_outfit text)
+returns integer language sql immutable as $$
+  select case p_outfit
+    when 'none' then 0 when 'leaf' then 100 when 'cap' then 300
+    when 'explorer' then 700 when 'grad' then 1500 when 'crown' then 3000
+    else null end;
+$$;
+
+-- Timo holati: ishlar soni, XP va tanlangan kiyim
+create or replace function public.get_timo_state()
+returns table (tasks integer, challenges integer, research integer, volunteer integer, xp integer, outfit text)
+language plpgsql stable security definer set search_path = public as $$
+declare
+  v_uid uuid := auth.uid();
+  v_ch  integer := 0;
+  v_rs  integer := 0;
+  v_vol integer := 0;
+  v_xp  integer := 0;
+  v_out text := 'none';
+begin
+  if v_uid is null then
+    raise exception 'Avval kiring' using errcode = '42501';
+  end if;
+  select count(*) into v_ch from public.challenge_submissions where student_id = v_uid and status = 'approved';
+  select count(*) into v_rs from public.eco_research where student_id = v_uid and status = 'published';
+  if to_regclass('public.volunteer_logs') is not null then
+    execute 'select count(*) from public.volunteer_logs where student_id = $1 and status = ''approved'''
+      into v_vol using v_uid;
+  end if;
+  select coalesce(points, 0) into v_xp from public.profiles where id = v_uid;
+  select t.outfit into v_out from public.timo_profiles t where t.student_id = v_uid;
+  -- Daraja keyinroq tushgan bo'lsa (ball qaytarilgan), kiyim ko'rinmaydi, lekin saqlanib qoladi
+  if v_out is null or public.timo_outfit_min(v_out) > v_xp then
+    v_out := 'none';
+  end if;
+  return query select v_ch + v_rs + v_vol, v_ch, v_rs, v_vol, v_xp, v_out;
+end $$;
+
+-- Kiyimni tanlash (faqat ochilgan bo'lsa)
+create or replace function public.set_timo_outfit(p_outfit text)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  v_min integer := public.timo_outfit_min(p_outfit);
+  v_xp  integer;
+begin
+  if auth.uid() is null then
+    raise exception 'Avval kiring' using errcode = '42501';
+  end if;
+  if v_min is null then
+    raise exception 'Bunday kiyim yo''q';
+  end if;
+  select coalesce(points, 0) into v_xp from public.profiles where id = auth.uid();
+  if v_xp < v_min then
+    raise exception 'Bu kiyim hali ochilmagan' using errcode = '42501';
+  end if;
+  insert into public.timo_profiles (student_id, outfit, updated_at)
+  values (auth.uid(), p_outfit, now())
+  on conflict (student_id) do update set outfit = excluded.outfit, updated_at = now();
+  return p_outfit;
+end $$;
+
+revoke all on function public.get_timo_state(), public.set_timo_outfit(text), public.timo_outfit_min(text) from public, anon;
+grant execute on function public.get_timo_state(), public.set_timo_outfit(text), public.timo_outfit_min(text) to authenticated;
+
+
 commit;
 
 -- Supabase API yangi jadval va funksiyalarni darhol ko'rishi uchun

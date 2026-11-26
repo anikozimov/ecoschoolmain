@@ -200,7 +200,7 @@ export default function ResearchPage() {
                       <article className="card p-6 sm:p-7">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div className="flex flex-wrap items-center gap-2">
-                            {item.team_name && <span className="chip bg-sky-100 text-[#8cc4f2]">👥 {item.team_name}</span>}
+                            {item.team_name && <span className="chip bg-sky-100 text-sky-500">👥 {item.team_name}</span>}
                             <StatusBadge status={item.status} />
                           </div>
                           <span className="text-xs font-bold text-muted">{formatDate(item.submitted_at)}</span>
@@ -210,7 +210,7 @@ export default function ResearchPage() {
                         <p className="mt-3 line-clamp-3 leading-7 text-muted">{item.summary}</p>
 
                         {item.reviewer_feedback && tab === "mine" && (
-                          <div className="mt-4 rounded-2xl bg-sand-100 p-4 text-sm text-[#f3cf7f]">
+                          <div className="mt-4 rounded-2xl bg-sand-100 p-4 text-sm text-sand-400">
                             <strong>Tekshiruvchi izohi:</strong> {item.reviewer_feedback}
                           </div>
                         )}
@@ -240,7 +240,7 @@ export default function ResearchPage() {
                 </div>
                 <div className="card p-4">
                   <p className="text-xs font-bold text-muted">Jamoalar</p>
-                  <p className="mt-1 font-display text-3xl font-semibold text-[#8cc4f2]">{teams}</p>
+                  <p className="mt-1 font-display text-3xl font-semibold text-sky-500">{teams}</p>
                 </div>
               </div>
               {pendingMine > 0 && (
@@ -257,7 +257,7 @@ export default function ResearchPage() {
                         <span className="text-muted">{r.label}</span>
                         <span>{r.max}</span>
                       </div>
-                      <div className="mt-1.5 h-1.5 rounded-full bg-white/5">
+                      <div className="mt-1.5 h-1.5 rounded-full bg-ink/5">
                         <div className="h-full rounded-full bg-leaf-400" style={{ width: `${(r.max / 25) * 100}%` }} />
                       </div>
                     </li>
@@ -282,8 +282,8 @@ export default function ResearchPage() {
             <div className="mt-5 whitespace-pre-wrap leading-8 text-ink/85">{reading.content}</div>
             {reading.sources && (
               <div className="mt-6 rounded-2xl bg-sky-100 p-4">
-                <p className="text-sm font-extrabold text-[#8cc4f2]">Manbalar</p>
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-[#a9d3f5]">{reading.sources}</p>
+                <p className="text-sm font-extrabold text-sky-500">Manbalar</p>
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-sky-500">{reading.sources}</p>
               </div>
             )}
           </div>

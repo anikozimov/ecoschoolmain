@@ -97,7 +97,7 @@ export default function ClassLeaderboardPage() {
                   <article className={`card card-hover p-5 sm:p-6 ${mine ? "ring-2 ring-leaf-400" : ""}`}>
                     <div className="flex items-center gap-4">
                       <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl font-display text-xl font-semibold ${
-                        i < 3 ? "bg-sand-200 text-[#f3cf7f]" : "bg-cream text-muted"
+                        i < 3 ? "bg-sand-200 text-sand-400" : "bg-cream text-muted"
                       }`}>
                         {i + 1}
                       </span>

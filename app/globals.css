@@ -3,44 +3,45 @@
 /* ───────────────────────── ECO SCHOOL dizayn tizimi ───────────────────────── */
 
 @theme {
-  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
-  --font-sans: "Nunito Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Trebuchet MS", ui-sans-serif, sans-serif;
+  --font-sans: "Onest Variable", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 
   /* Tungi o'rmon — bioluminescent palitra */
   --color-forest-950: #03110a;
-  --color-forest-900: #071a10;
-  --color-forest-800: #0b2618;
-    --color-forest-700: #123a25;
+  --color-forest-900: #0f2520;
+  --color-forest-800: #16352f;
+  --color-forest-700: #1d4a40;
   --color-forest-600: #1d6b42;
   --color-forest-500: #2fae6a;
 
   --color-leaf-500: #7fd65a;
   --color-leaf-400: #a6eb7a;
   --color-leaf-300: #c8f56f;
-  --color-leaf-200: rgb(166 235 122 / 0.16);
-  --color-leaf-100: rgb(166 235 122 / 0.08);
+  --color-leaf-200: rgb(31 122 69 / 0.14);
+  --color-leaf-100: rgb(31 122 69 / 0.07);
 
-  --color-sand-500: #f0b850;
-  --color-sand-400: #f6d07e;
-  --color-sand-200: rgb(246 208 126 / 0.16);
-  --color-sand-100: rgb(246 208 126 / 0.08);
+  --color-sand-500: #d99a1e;
+  --color-sand-400: #9a6307;
+  --color-sand-200: rgb(217 154 30 / 0.18);
+  --color-sand-100: rgb(217 154 30 / 0.09);
 
-  --color-cream: #040e09;
-  --color-paper: #0b1d14;
-  --color-surface: rgb(18 44 30 / 0.62);
-  --color-ink: #ecf8e8;
-  --color-muted: #93ab9b;
-  --color-line: rgb(190 255 200 / 0.10);
-  --color-accent: #b4f07f;
+  /* Yorug', professional mavzu: och fon, to'q yashil-ko'k matn, bitta asosiy yashil rang */
+  --color-cream: #f2f6f4;
+  --color-paper: #ffffff;
+  --color-surface: #ffffff;
+  --color-ink: #12302a;
+  --color-muted: #5b6e69;
+  --color-line: rgb(18 48 42 / 0.11);
+  --color-accent: #1f7a45;
 
-  --color-sky-100: rgb(108 182 245 / 0.12);
-  --color-sky-500: #6cb6f5;
-  --color-coral-100: rgb(255 122 92 / 0.12);
-  --color-coral-500: #ff7a5c;
+  --color-sky-100: rgb(37 88 196 / 0.08);
+  --color-sky-500: #2558c4;
+  --color-coral-100: rgb(200 64 38 / 0.08);
+  --color-coral-500: #c84026;
 
-  --radius-card: 1.5rem;
-  --shadow-soft: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 20px 40px -24px rgb(0 0 0 / 0.8);
-  --shadow-lift: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 30px 60px -20px rgb(0 0 0 / 0.9), 0 0 40px -10px rgb(166 235 122 / 0.25);
+  --radius-card: 1rem;
+  --shadow-soft: 0 1px 2px rgb(18 48 42 / 0.05), 0 6px 20px -12px rgb(18 48 42 / 0.14);
+  --shadow-lift: 0 2px 4px rgb(18 48 42 / 0.06), 0 18px 40px -18px rgb(18 48 42 / 0.24);
 
   --animate-float: float 6s ease-in-out infinite;
   --animate-rise: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
@@ -65,28 +66,31 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-html { background: var(--color-cream); color-scheme: dark; }
+html { background: var(--color-cream); color-scheme: light; }
 /* Animatsiya va bezaklar telefonda gorizontal siljish keltirib chiqarmasin (sticky'ni buzmaydi) */
 html, body { overflow-x: clip; }
 body {
   background: transparent;
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-feature-settings: "ss01";
+  font-feature-settings: normal;
 }
 
 ::selection {
-  background: var(--color-leaf-300);
-  color: var(--color-forest-950);
+  background: rgb(31 122 69 / 0.2);
+  color: var(--color-ink);
 }
 
 h1, h2, h3, .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
+  font-optical-sizing: auto;
 }
+/* Sarlavhalardagi "kursiv" — yangi shriftda tik, gradient bilan ajratiladi */
+:is(h1, h2, h3, .font-display) .italic { font-style: normal; }
 
 :focus-visible {
-  outline: 3px solid var(--color-leaf-400);
+  outline: 3px solid rgb(31 122 69 / 0.45);
   outline-offset: 2px;
   border-radius: 0.6rem;
 }
@@ -97,30 +101,30 @@ h1, h2, h3, .font-display {
 
 /* Tugmalar */
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-bold transition duration-200 select-none disabled:cursor-not-allowed disabled:opacity-55 active:scale-[0.98];
+  @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-5 py-2.5 text-sm font-semibold transition duration-150 select-none disabled:cursor-not-allowed disabled:opacity-55;
 }
 @utility btn-primary {
-  @apply text-forest-950 hover:brightness-110; background-image: linear-gradient(120deg, #d9ff7a, #8ef08a 45%, #3fd6a0); box-shadow: 0 0 0 1px rgb(255 255 255 / 0.2) inset, 0 10px 30px -8px rgb(140 240 138 / 0.55);
+  @apply bg-[#1f7a45] text-white hover:bg-[#19673a]; box-shadow: 0 1px 2px rgb(18 48 42 / 0.2);
 }
 @utility btn-lime {
-  @apply bg-leaf-400 text-forest-950 hover:bg-leaf-300 shadow-[0_8px_26px_-8px_rgb(166_235_122/0.6)];
+  @apply bg-[#e3f1e8] text-[#17603a] hover:bg-[#d3eadb];
 }
 @utility btn-ghost {
-  @apply border border-white/15 bg-white/[0.04] text-ink hover:border-leaf-400/50 hover:bg-white/[0.08];
+  @apply border border-[rgb(18_48_42/0.16)] bg-white text-ink hover:border-[rgb(18_48_42/0.3)] hover:bg-[#f7faf8];
 }
 @utility btn-danger {
   @apply border border-coral-500/40 bg-coral-100 text-coral-500 hover:bg-coral-500/20;
 }
 @utility btn-sm {
-  @apply px-4 py-2 text-xs;
+  @apply rounded-lg px-3.5 py-2 text-xs;
 }
 
 /* Kartalar */
 @utility card {
-  @apply relative isolate rounded-[1.5rem] border border-line bg-[rgb(15_37_26/0.86)] shadow-[var(--shadow-soft)];
+  @apply relative isolate rounded-[16px] border border-line bg-white shadow-[var(--shadow-soft)];
 }
 @utility card-hover {
-  @apply transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)];
+  @apply transition duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)];
 }
 
 /* Formalar */
@@ -128,13 +132,13 @@ h1, h2, h3, .font-display {
   @apply mb-2 block text-sm font-bold text-ink;
 }
 @utility input {
-  @apply w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-[15px] text-ink outline-none transition placeholder:text-muted/60 focus:border-leaf-400/70 focus:bg-white/[0.06] focus:ring-4 focus:ring-leaf-400/15 disabled:cursor-not-allowed disabled:opacity-60;
+  @apply w-full rounded-[10px] border border-[rgb(18_48_42/0.18)] bg-white px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-muted/70 focus:border-[#1f7a45] focus:ring-4 focus:ring-[#1f7a45]/12 disabled:cursor-not-allowed disabled:opacity-60;
 }
 @utility hint {
   @apply mt-2 text-xs leading-5 text-muted;
 }
 @utility eyebrow {
-  @apply inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.22em] text-accent;
+  @apply inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-accent;
 }
 @utility chip {
   @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold;
@@ -159,7 +163,7 @@ h1, h2, h3, .font-display {
 /* ───────────────────────── EFFEKTLAR ───────────────────────── */
 
 /* Asosiy tugmalarda yaltiroq nur */
-.btn-primary, .btn-lime { position: relative; overflow: hidden; isolation: isolate; }
+.btn-primary, .btn-lime { position: relative; }
 .btn-primary::after, .btn-lime::after {
   content: "";
   position: absolute;
@@ -169,7 +173,7 @@ h1, h2, h3, .font-display {
   transform: translateX(-120%);
   transition: transform 0.7s ease;
 }
-.btn-primary:hover::after, .btn-lime:hover::after { transform: translateX(120%); }
+.btn-primary::after, .btn-lime::after { display: none; }
 
 /* Scroll'da paydo bo‘lish */
 .reveal {
@@ -242,12 +246,7 @@ h1, h2, h3, .font-display {
 
 /* Jonli gradient matn */
 .text-gradient-anim {
-  background: linear-gradient(100deg, var(--color-forest-600), var(--color-leaf-500), var(--color-sand-500), var(--color-forest-500), var(--color-forest-600));
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradient-x 8s ease-in-out infinite;
+  color: var(--color-accent);
 }
 @keyframes gradient-x {
   0%, 100% { background-position: 0% 50%; }
@@ -402,11 +401,10 @@ h1, h2, h3, .font-display {
 
 /* ═════════════════ TUNGI O‘RMON — WOW EFFEKTLAR ═════════════════ */
 @utility bg-glow {
-  background-image: linear-gradient(120deg, #d9ff7a, #8ef08a 45%, #3fd6a0);
-  box-shadow: 0 0 24px -6px rgb(140 240 138 / 0.6);
+  background-color: #d4ecdc;
 }
 @utility text-glow {
-  text-shadow: 0 0 24px rgb(180 240 127 / 0.55), 0 0 2px rgb(180 240 127 / 0.6);
+  text-shadow: none;
 }
 
 /* Kursor ortidan yuruvchi nur — barcha kartalarda */
@@ -419,7 +417,7 @@ h1, h2, h3, .font-display {
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.4s;
-  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgb(180 240 127 / 0.13), transparent 60%);
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgb(160 220 200 / 0.10), transparent 60%);
 }
 .card:hover::before { opacity: 1; }
 .card::after {
@@ -429,7 +427,7 @@ h1, h2, h3, .font-display {
   border-radius: inherit;
   padding: 1px;
   pointer-events: none;
-  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgb(200 245 111 / 0.85), transparent 65%);
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgb(190 240 170 / 0.6), transparent 65%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -499,10 +497,9 @@ h1, h2, h3, .font-display {
 @keyframes beam { 0% { left: -30%; } 100% { left: 100%; } }
 
 .glass-strong {
-  background: linear-gradient(160deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.02));
-  border: 1px solid rgb(255 255 255 / 0.12);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  background: rgb(255 255 255 / 0.92);
+  border: 1px solid rgb(18 48 42 / 0.1);
+  box-shadow: 0 8px 24px -14px rgb(18 48 42 / 0.3);
 }
 
 .glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
@@ -531,31 +528,28 @@ h1, h2, h3, .font-display {
 :is([data-perf="lite"], [data-perf="off"]) *, :is([data-perf="lite"], [data-perf="off"]) *::before, :is([data-perf="lite"], [data-perf="off"]) *::after {
   -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
 }
-:is([data-perf="lite"], [data-perf="off"]) .glass-strong { background: rgb(20 48 33 / 0.9); }
+:is([data-perf="lite"], [data-perf="off"]) .glass-strong { background: #fff; }
 
 /* ═════════ PASTKI MENYU (Dock) ═════════ */
 .dock {
-  background: linear-gradient(180deg, rgb(24 56 38 / 0.82), rgb(8 24 16 / 0.9));
-  border: 1px solid rgb(255 255 255 / 0.12);
-  box-shadow:
-    0 18px 50px -12px rgb(0 0 0 / 0.75),
-    0 0 0 1px rgb(0 0 0 / 0.25),
-    inset 0 1px 0 rgb(255 255 255 / 0.1);
+  background: rgb(255 255 255 / 0.9);
+  border: 1px solid rgb(18 48 42 / 0.12);
+  box-shadow: 0 16px 40px -16px rgb(18 48 42 / 0.35), 0 1px 2px rgb(18 48 42 / 0.06);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   backdrop-filter: blur(16px) saturate(150%);
 }
 /* Yuqori chetidagi yorug' chiziq */
 .dock::before {
   content: ""; position: absolute; left: 12%; right: 12%; top: -1px; height: 1px; pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgb(200 245 111 / 0.8), transparent);
+  background: none;
 }
 /* Sirpanuvchi faol belgi */
 .dock-indicator {
   position: absolute; z-index: 0; top: 6px; bottom: 6px; left: 0;
   width: var(--ind-w, 0); transform: translateX(var(--ind-x, 0)); opacity: var(--ind-o, 0);
   border-radius: 1rem;
-  background: linear-gradient(135deg, #e3ff8f, #a6eb7a 45%, #5fe0a8);
-  box-shadow: 0 0 22px rgb(166 235 122 / 0.55), 0 6px 16px -6px rgb(95 224 168 / 0.8);
+  background: #1f7a45;
+  box-shadow: 0 4px 12px -4px rgb(31 122 69 / 0.6);
   transition: transform 0.5s cubic-bezier(0.34, 1.4, 0.5, 1), width 0.5s cubic-bezier(0.34, 1.4, 0.5, 1), opacity 0.3s;
 }
 .dock-item, .tab-item { z-index: 1; -webkit-tap-highlight-color: transparent; }
@@ -572,8 +566,8 @@ h1, h2, h3, .font-display {
 .dock-tip {
   position: absolute; bottom: calc(100% + 18px); left: 50%; translate: -50% 6px;
   padding: 5px 10px; border-radius: 10px; white-space: nowrap; pointer-events: none;
-  font-size: 12px; font-weight: 800; color: #0b1f15; background: #e3ff8f;
-  box-shadow: 0 8px 20px -6px rgb(0 0 0 / 0.6);
+  font-size: 12px; font-weight: 600; color: #fff; background: #12302a;
+  box-shadow: 0 8px 20px -8px rgb(18 48 42 / 0.5);
   opacity: 0; transition: opacity 0.2s, translate 0.25s;
 }
 .dock-item:hover .dock-tip { opacity: 1; translate: -50% 0; }
@@ -592,9 +586,9 @@ h1, h2, h3, .font-display {
 
 /* "Ko'proq" varag'i */
 .sheet {
-  background: linear-gradient(180deg, rgb(26 60 41 / 0.97), rgb(10 28 19 / 0.98));
-  border: 1px solid rgb(255 255 255 / 0.12);
-  box-shadow: 0 -10px 50px -10px rgb(0 0 0 / 0.7), 0 0 40px -10px rgb(166 235 122 / 0.25);
+  background: #fff;
+  border: 1px solid rgb(18 48 42 / 0.12);
+  box-shadow: 0 -10px 40px -14px rgb(18 48 42 / 0.35);
   transform-origin: bottom center;
   animation: sheet-in 0.35s cubic-bezier(0.34, 1.4, 0.5, 1);
 }
@@ -605,7 +599,7 @@ h1, h2, h3, .font-display {
 @keyframes fade-in { from { opacity: 0; } }
 
 /* Yengil rejim: xiralashtirishsiz, lekin to'liq fon */
-:is([data-perf="lite"], [data-perf="off"]) .dock { background: linear-gradient(180deg, rgb(24 56 38 / 0.98), rgb(8 24 16 / 0.99)); }
+:is([data-perf="lite"], [data-perf="off"]) .dock { background: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .dock-indicator, .dock-icon, .tab-icon, .sheet, .sheet-item { transition: none; animation: none; }
 }
@@ -638,3 +632,122 @@ h1, h2, h3, .font-display {
 .leaf, .text-gradient-anim, .text-aurora, .wave-path, .pulse-ring::before, .beam, .glow-pulse,
 .blob, .animate-bounce, .animate-ping, .logo-dot { animation: none !important; }
 .leaf { display: none; }
+
+/* ---------- Chop etish (sertifikat, hisobot) ---------- */
+@media print {
+  html, body { background: #fff !important; color: #111 !important; }
+  header, footer, nav, aside, canvas, .fixed, .no-print { display: none !important; }
+  main { padding: 0 !important; }
+  .print-area { box-shadow: none !important; }
+  .print-page { break-after: page; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; animation: none !important; transition: none !important; }
+}
+
+/* Timo dunyosi o'ynalayotganda pastki menyu yashiriladi */
+html[data-game="on"] nav.fixed { display: none !important; }
+
+/* ═════════ TIMO BOG'I ═════════ */
+.garden-scroll { scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 0.2) transparent; overscroll-behavior-x: contain; }
+.garden-stage { scroll-snap-align: start; }
+.garden-scroll :is(.g-sway, .g-sway-sm, .g-pulse, .g-ripple, .g-wing, .g-blades, .g-smoke circle, .grow-in) { transform-box: fill-box; }
+
+.g-cloud { animation: g-cloud 70s linear infinite; }
+@keyframes g-cloud { from { transform: translateX(-120px); } to { transform: translateX(260px); } }
+.g-sway { transform-origin: 50% 100%; animation: g-sway 6s ease-in-out infinite; }
+.g-sway-sm { transform-origin: 50% 100%; animation: g-sway 4s ease-in-out infinite; }
+@keyframes g-sway { 0%, 100% { rotate: -1.6deg; } 50% { rotate: 1.6deg; } }
+.g-pulse { transform-origin: center; animation: g-pulse 5s ease-in-out infinite; }
+@keyframes g-pulse { 0%, 100% { scale: 1; } 50% { scale: 1.06; } }
+.g-twinkle { animation: g-twinkle 2.6s ease-in-out infinite; }
+@keyframes g-twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+.g-firefly { animation: g-firefly 3.5s ease-in-out infinite; filter: drop-shadow(0 0 6px #fff6a8); }
+@keyframes g-firefly { 0%, 100% { opacity: 0.1; translate: 0 0; } 50% { opacity: 1; translate: 14px -18px; } }
+.g-smoke circle { animation: g-smoke 4s ease-in infinite; transform-origin: center; }
+.g-smoke circle:nth-child(2) { animation-delay: 1.3s; }
+.g-smoke circle:nth-child(3) { animation-delay: 2.6s; }
+@keyframes g-smoke { 0% { opacity: 0; translate: 0 20px; scale: 0.5; } 30% { opacity: 0.7; } 100% { opacity: 0; translate: 10px -30px; scale: 1.4; } }
+.g-blades { animation: g-spin 5s linear infinite; transform-origin: center; }
+@keyframes g-spin { to { rotate: 360deg; } }
+.g-ripple { transform-origin: center; animation: g-ripple 3.2s ease-out infinite; }
+@keyframes g-ripple { from { scale: 0.4; opacity: 0.9; } to { scale: 2.4; opacity: 0; } }
+.g-flow { animation: g-flow 1.6s linear infinite; }
+@keyframes g-flow { to { stroke-dashoffset: -72; } }
+.g-fall { animation: g-flow 0.7s linear infinite; }
+.g-bfly { animation: g-bfly 9s ease-in-out infinite; }
+@keyframes g-bfly { 0%, 100% { translate: 0 0; } 25% { translate: 40px -30px; } 50% { translate: 80px 4px; } 75% { translate: 30px 24px; } }
+.g-wing { transform-origin: center; animation: g-wing 0.35s ease-in-out infinite alternate; }
+@keyframes g-wing { from { scale: 1 1; } to { scale: 0.35 1; } }
+.g-birds { animation: g-birds 26s linear infinite; }
+@keyframes g-birds { from { translate: -500px 30px; } to { translate: 2200px -40px; } }
+.g-rain line { animation: g-rain 0.9s linear infinite; }
+@keyframes g-rain { from { translate: 0 0; opacity: 0; } 15% { opacity: 1; } to { translate: -30px 520px; opacity: 0.2; } }
+.grow-in { transform-origin: 50% 100%; animation: grow-in 1.1s cubic-bezier(0.3, 1.5, 0.5, 1) both; animation-delay: 0.3s; }
+@keyframes grow-in { from { scale: 0; opacity: 0; } to { scale: 1; opacity: 1; } }
+
+/* Timo */
+.timo-figure[data-mood="idle"] .timo-body { animation: timo-idle 3.4s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes timo-idle { 0%, 100% { translate: 0 0; rotate: -1deg; } 50% { translate: 0 -4%; rotate: 1.5deg; } }
+.timo-figure[data-mood="happy"] .timo-body { animation: timo-happy 0.9s cubic-bezier(0.3, 1.6, 0.5, 1); transform-origin: 50% 100%; }
+@keyframes timo-happy { 0% { translate: 0 0; scale: 1; } 25% { translate: 0 2%; scale: 1.08 0.92; } 55% { translate: 0 -22%; scale: 0.95 1.06; rotate: -6deg; } 80% { translate: 0 0; scale: 1.04 0.96; } 100% { translate: 0 0; scale: 1; } }
+.timo-figure[data-mood="sleep"] .timo-body { animation: timo-sleep 4.5s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes timo-sleep { 0%, 100% { scale: 1; rotate: -3deg; } 50% { scale: 1.02 0.98; rotate: -3deg; } }
+.timo-zzz span, .timo-zzz { display: inline-block; animation: timo-zzz 2.4s ease-in-out infinite; }
+.timo-zzz span:nth-child(1) { animation-delay: 0.4s; font-size: 0.85em; }
+.timo-zzz span:nth-child(2) { animation-delay: 0.8s; font-size: 0.7em; }
+@keyframes timo-zzz { 0% { opacity: 0; translate: 0 6px; } 40% { opacity: 1; } 100% { opacity: 0; translate: 8px -14px; } }
+.timo-in-garden { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.timo-in-garden:focus-visible { border-radius: 1rem; }
+.timo-bubble { animation: bubble-in 0.35s cubic-bezier(0.3, 1.5, 0.5, 1) both; transform-origin: 50% 100%; }
+@keyframes bubble-in { from { opacity: 0; scale: 0.7; } to { opacity: 1; scale: 1; } }
+
+/* Kuchsiz qurilmada bog' tinch turadi (faqat bosishga javob beradigan effektlar qoladi) */
+:is([data-perf="lite"], [data-perf="off"]) :is(
+  .g-cloud, .g-sway, .g-sway-sm, .g-pulse, .g-twinkle, .g-firefly, .g-smoke circle, .g-blades, .g-ripple,
+  .g-flow, .g-fall, .g-bfly, .g-wing, .g-birds, .timo-zzz, .timo-zzz span
+) { animation: none !important; }
+:is([data-perf="lite"], [data-perf="off"]) .timo-figure:is([data-mood="idle"], [data-mood="sleep"]) .timo-body { animation: none; }
+
+/* ═════════ YANGI DIZAYN QATLAMI: shisha plitkalar va Timo yordamchi ═════════ */
+.glass-tile {
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.05);
+  border: 1px solid rgb(205 235 255 / 0.1);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+.buddy-btn {
+  background: linear-gradient(160deg, rgb(40 74 70 / 0.95), rgb(10 24 30 / 0.95));
+  border: 1px solid rgb(255 255 255 / 0.16);
+  box-shadow: 0 14px 34px -10px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.12);
+  transition: transform 0.25s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.buddy-btn:hover { transform: translateY(-3px) rotate(-3deg); }
+.buddy-btn:active { transform: scale(0.95); }
+.buddy-panel {
+  background: linear-gradient(180deg, rgb(18 36 42 / 0.97), rgb(8 18 24 / 0.98));
+  border: 1px solid rgb(255 255 255 / 0.12);
+  box-shadow: 0 24px 60px -16px rgb(0 0 0 / 0.85);
+  animation: bubble-in 0.3s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  transform-origin: 100% 100%;
+}
+
+/* ═════════ YORUG' PROFESSIONAL MAVZU: ortiqcha "o'yinchoq" effektlar o'chirilgan ═════════ */
+.text-aurora { background: none !important; color: var(--color-accent) !important; -webkit-text-fill-color: currentColor; animation: none !important; filter: none !important; }
+.text-outline { -webkit-text-stroke: 1.5px rgb(31 122 69 / 0.45); }
+.text-outline-solid { color: var(--color-accent); text-shadow: none; }
+.card::before, .card::after, .cursor-glow, .tilt-glare::after, .glow-border::before { display: none !important; }
+.tilt { transform: none !important; }
+.aurora-bg span { mix-blend-mode: normal; animation: none; filter: blur(110px); }
+.aurora::before { display: none; }
+.leaf-pattern { background-image: radial-gradient(circle at 1px 1px, rgb(18 48 42 / 0.05) 1px, transparent 0); }
+.animate-float { animation: none; }
+.hover-bounce:hover .bounce-target { animation: none; }
+.pulse-ring::before { display: none; }
+.portal-ring { filter: none; }
+.dock-item:hover .dock-icon { transform: translateY(-3px) !important; }
+.dock-item:hover + .dock-item .dock-icon,
+.dock-item:has(+ .dock-item:hover) .dock-icon { transform: none !important; }
+.admin-card[data-status="pending"] { box-shadow: var(--shadow-soft), 0 0 0 1px rgb(217 154 30 / 0.35); }
+.glass-tile { background: #fff; border-color: var(--color-line); box-shadow: var(--shadow-soft); }
+.buddy-panel { background: #fff; border-color: var(--color-line); box-shadow: 0 24px 60px -18px rgb(18 48 42 / 0.35); color: var(--color-ink); }
+.buddy-btn { background: #fff; border: 1px solid var(--color-line); box-shadow: 0 10px 28px -10px rgb(18 48 42 / 0.4); }
+.buddy-btn:hover { transform: translateY(-2px); }

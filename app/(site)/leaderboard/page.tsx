@@ -128,7 +128,7 @@ export default function LeaderboardPage() {
                   const me = s.student_id === user?.id;
                   return (
                     <li key={s.student_id} className={`flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-cream sm:gap-4 sm:px-5 ${me ? "bg-leaf-100" : ""}`}>
-                      <span className={`w-8 shrink-0 text-center font-display text-lg font-semibold ${s.rank <= 3 ? "text-[#f3cf7f]" : "text-muted"}`}>
+                      <span className={`w-8 shrink-0 text-center font-display text-lg font-semibold ${s.rank <= 3 ? "text-sand-400" : "text-muted"}`}>
                         {s.rank}
                       </span>
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-leaf-200 text-xs font-black text-accent">

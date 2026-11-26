@@ -21,6 +21,7 @@ const DB: Record<string, any[]> = {
     { id: "s-aziz", full_name: "Aziz Karimov", class_name: "8-B", school_code: "ECO21", school_id: 1, points: 365, role: "student", username: "aziz.k", is_owner: false },
     { id: "s-jasur", full_name: "Jasur Toshmatov", class_name: "10-A", school_code: "ECO21", school_id: 1, points: 310, role: "admin", username: "jasur", is_owner: false },
     { id: "s-sevara", full_name: "Sevara Olimova", class_name: "7-V", school_code: "ECO21", school_id: 1, points: 180, role: "student", username: "sevara", is_owner: false },
+    { id: "s-nodir", full_name: "Nodir Ergashev", class_name: "", school_code: "ECO21", school_id: 1, points: 140, role: "volunteer", username: "nodir", is_owner: false },
     { id: "s-bekzod", full_name: "Bekzod Aliyev", class_name: "8-B", school_code: "ECO21", school_id: 1, points: 95, role: "student", username: "bekzod_a", is_owner: false },
   ],
   site_content: [],
@@ -66,10 +67,70 @@ const DB: Record<string, any[]> = {
     { id: 41, title: "Plastiksiz hafta", description: null, event_type: "challenge", start_date: day(7), end_date: day(13), location: null, school_id: 1 },
     { id: 42, title: "Eko-viktorina", description: "Sinflar o‘rtasida bilimlar bellashuvi.", event_type: "event", start_date: day(0), end_date: null, location: "Faollar zali", school_id: 1 },
   ],
+  volunteer_logs: [
+    { id: 60, student_id: "s-nodir", work_date: day(-2), title: "Maktab hovlisini tozaladik", description: "5 kishi bo‘lib hovli va sport maydonchasini tozaladik, 12 qop chiqindi yig‘ildi.", hours: 3, approved_hours: null, proof_url: null, status: "pending", awarded_points: 0, reviewer_feedback: null, submitted_at: ago(20), profiles: { full_name: "Nodir Ergashev" } },
+    { id: 61, student_id: "s-nodir", work_date: day(-9), title: "Boshlang‘ich sinflarga saralash darsi", description: "2-“A” va 2-“B” sinflarga chiqindi saralashni o‘ynab o‘rgatdik.", hours: 2, approved_hours: 2, proof_url: null, status: "approved", awarded_points: 20, reviewer_feedback: "Rahmat, zo‘r tashabbus!", submitted_at: ago(24 * 9), profiles: { full_name: "Nodir Ergashev" } },
+    { id: 62, student_id: "s-nodir", work_date: day(-16), title: "Daraxt ekish kuni", description: null, hours: 4, approved_hours: 3.5, proof_url: null, status: "approved", awarded_points: 35, reviewer_feedback: null, submitted_at: ago(24 * 16), profiles: { full_name: "Nodir Ergashev" } },
+  ],
+  shop_items: [
+    { id: 1, title: "Eco Champion stikeri", description: "Noutbuk yoki kundalik uchun", icon: "🌿", price: 50, stock: null, for_class: false, active: true, sort_order: 1 },
+    { id: 2, title: "Eco daftar", description: "Qayta ishlangan qog‘ozdan", icon: "📒", price: 120, stock: 15, for_class: false, active: true, sort_order: 2 },
+    { id: 3, title: "Suv idishi", description: "Plastik butilka o‘rniga", icon: "🥤", price: 300, stock: 5, for_class: false, active: true, sort_order: 3 },
+    { id: 4, title: "Eco ko‘ylak", description: "ECO SCHOOL logotipli", icon: "👕", price: 600, stock: 3, for_class: false, active: true, sort_order: 4 },
+    { id: 5, title: "Sinf uchun daraxt ekish", description: "Sinfingiz nomidan ko‘chat", icon: "🌳", price: 800, stock: null, for_class: true, active: true, sort_order: 5 },
+    { id: 6, title: "Eko-ekskursiya", description: "Butun sinf bilan tabiat bo‘ylab sayohat", icon: "🚌", price: 2000, stock: null, for_class: true, active: true, sort_order: 6 },
+  ],
+  shop_orders: [
+    { id: 70, item_id: 1, item_title: "Eco Champion stikeri", student_id: UID, price: 50, status: "delivered", created_at: ago(200), handled_at: ago(150), profiles: { full_name: "Dilnoza Rahimova", class_name: "9-A" } },
+    { id: 71, item_id: 2, item_title: "Eco daftar", student_id: "s-aziz", price: 120, status: "pending", created_at: ago(5), handled_at: null, profiles: { full_name: "Aziz Karimov", class_name: "8-B" } },
+  ],
+  recycling_batches: [
+    { id: 80, title: "1-partiya", paper_kg: 84.5, plastic_kg: 31.2, stage: 6, income: 146900, receipt_url: null, note: "“Toza Hudud” korxonasiga topshirildi", history: [], created_at: ago(24 * 40), updated_at: ago(24 * 30) },
+    { id: 81, title: "2-partiya", paper_kg: 58, plastic_kg: 32, stage: 3, income: 0, receipt_url: null, note: null, history: [], created_at: ago(24 * 6), updated_at: ago(24 * 2) },
+  ],
+  fund_projects: [
+    { id: 90, title: "Maktabda yashil bog‘", description: "Hovliga 30 ta ko‘chat va o‘rindiqlar", active: true },
+    { id: 91, title: "Saralash qutilari", description: "Har qavatga 3 xil rangli quti", active: true },
+    { id: 92, title: "Suv quyish nuqtasi", description: "Plastik butilkalarni kamaytirish uchun", active: true },
+  ],
+  eco_goals: [
+    { id: 1, title: "Faol o‘quvchilar", unit: "%", target: 70, current: 0, auto: "active_pct", sort_order: 1 },
+    { id: 2, title: "Ishtirok etgan sinflar", unit: "%", target: 100, current: 0, auto: "classes_pct", sort_order: 2 },
+    { id: 3, title: "Qog‘oz yig‘ish", unit: "kg", target: 500, current: 0, auto: "paper_kg", sort_order: 3 },
+    { id: 4, title: "Plastik yig‘ish", unit: "kg", target: 200, current: 0, auto: "plastic_kg", sort_order: 4 },
+    { id: 5, title: "Aralash chiqindini kamaytirish", unit: "%", target: 30, current: 12, auto: null, sort_order: 5 },
+    { id: 6, title: "Elektr energiyasini tejash", unit: "%", target: 10, current: 4, auto: null, sort_order: 6 },
+    { id: 7, title: "Ekologik tadqiqotlar", unit: "ta", target: 15, current: 0, auto: "research", sort_order: 7 },
+    { id: 8, title: "Ekologiya integratsiya qilingan fanlar", unit: "ta", target: 5, current: 2, auto: null, sort_order: 8 },
+    { id: 9, title: "Hamkor tashkilotlar", unit: "ta", target: 3, current: 1, auto: null, sort_order: 9 },
+    { id: 10, title: "Eco Committee yig‘ilishlari", unit: "ta", target: 9, current: 2, auto: null, sort_order: 10 },
+    { id: 11, title: "O‘quvchi tashabbuslari", unit: "ta", target: 20, current: 6, auto: null, sort_order: 11 },
+  ],
+  committee_members: [
+    { id: 1, full_name: "Dilnoza Rahimova", role_title: "Rais", class_name: "9-A", sort_order: 1 },
+    { id: 2, full_name: "Jasur Toshmatov", role_title: "Kotib", class_name: "10-A", sort_order: 2 },
+    { id: 3, full_name: "Madina Yusupova", role_title: "A’zo", class_name: "9-A", sort_order: 3 },
+    { id: 4, full_name: "Nodira Qodirova", role_title: "Biologiya o‘qituvchisi", class_name: null, sort_order: 4 },
+  ],
+  committee_meetings: [
+    { id: 1, meet_date: day(-20), title: "Eco Committee tashkil etildi", minutes: "12 kishi qatnashdi.", decisions: "Rais va kotib saylandi. Oyiga bir marta yig‘ilish." },
+    { id: 2, meet_date: day(-5), title: "Ekologik audit natijalari", minutes: null, decisions: "Asosiy muammo — plastik butilkalar. Saralash qutilari loyihasi boshlanadi." },
+  ],
+  action_tasks: [
+    { id: 1, step: "review", title: "Maktab chiqindilarini 5 kun tortib o‘lchash", owner_name: "Jasur T.", deadline: day(-10), status: "done" },
+    { id: 2, step: "action", title: "Har qavatga saralash qutisi o‘rnatish", owner_name: "Dilnoza R.", deadline: day(14), status: "doing" },
+    { id: 3, step: "curriculum", title: "Biologiya darsida “Chiqindi va tabiat” mavzusi", owner_name: "N. Qodirova", deadline: day(21), status: "todo" },
+    { id: 4, step: "inform", title: "Ota-onalar uchun Telegram post", owner_name: "Madina Y.", deadline: day(7), status: "todo" },
+  ],
 };
 
 const sortClasses = (list: any[]) =>
   [...list].sort((a, b) => (parseInt(a.class_name) || 99) - (parseInt(b.class_name) || 99) || a.class_name.localeCompare(b.class_name));
+
+const FUND_VOTES: Record<number, number> = { 90: 14, 91: 22, 92: 9 };
+let myVote: number | null = null;
+let timoOutfit = "leaf";
+const GAME = { best: 0, rewarded: false };
 
 const RPC: Record<string, (p: any) => any> = {
   get_my_school_classes: () => sortClasses(DB.school_classes.filter((c) => String(c.school_id) === "1")).map((c) => ({ class_name: c.class_name })),
@@ -86,6 +147,92 @@ const RPC: Record<string, (p: any) => any> = {
     });
     return [...m.values()].sort((a, b) => b.total_kg - a.total_kg);
   },
+  get_volunteer_board: () =>
+    DB.profiles.filter((p) => p.role === "volunteer").map((p) => {
+      const ok = DB.volunteer_logs.filter((v) => v.student_id === p.id && v.status === "approved");
+      return { student_id: p.id, full_name: p.full_name, hours: ok.reduce((a, v) => a + Number(v.approved_hours), 0), entries: ok.length, points: ok.reduce((a, v) => a + v.awarded_points, 0) };
+    }).sort((a, b) => b.hours - a.hours),
+  my_volunteer_hours: (p) =>
+    DB.volunteer_logs.filter((v) => v.student_id === (p.p_user ?? UID) && v.status === "approved").reduce((a, v) => a + Number(v.approved_hours), 0),
+  submit_game_score: (p) => {
+    const score = Math.max(0, Math.min(20000, Number(p.p_score) || 0));
+    GAME.best = Math.max(GAME.best, score);
+    let reward = 0;
+    if (score >= 100 && !GAME.rewarded) {
+      reward = Math.min(10, Math.floor(score / 100));
+      GAME.rewarded = true;
+      DB.profiles[0].points += reward;
+    }
+    return [{ best: GAME.best, reward, rewarded_today: GAME.rewarded }];
+  },
+  get_game_top: () =>
+    [
+      { student_id: "s-aziz", full_name: "Aziz Karimov", class_name: "8-B", best: 640 },
+      { student_id: "s-sevara", full_name: "Sevara Olimova", class_name: "7-V", best: 410 },
+      ...(GAME.best ? [{ student_id: UID, full_name: DB.profiles[0].full_name, class_name: DB.profiles[0].class_name, best: GAME.best }] : []),
+      { student_id: "s-bekzod", full_name: "Bekzod Aliyev", class_name: "8-B", best: 230 },
+    ].sort((a, b) => b.best - a.best),
+  get_timo_state: () => {
+    const me = DB.profiles[0];
+    const ch = DB.challenge_submissions.filter((x: any) => x.student_id === UID && x.status === "approved").length;
+    const rs = DB.eco_research.filter((x: any) => x.student_id === UID && x.status === "published").length;
+    const vol = ((DB as any).volunteer_logs || []).filter((x: any) => x.student_id === UID && x.status === "approved").length;
+    const extra = 12 - (ch + rs + vol);
+    return [{ tasks: Math.max(12, ch + rs + vol), challenges: ch + Math.max(0, extra), research: rs, volunteer: vol, xp: me.points, outfit: timoOutfit }];
+  },
+  set_timo_outfit: (p) => {
+    const need: Record<string, number> = { none: 0, leaf: 100, cap: 300, explorer: 700, grad: 1500, crown: 3000 };
+    if (!(p.p_outfit in need)) throw new Error("Bunday kiyim yo‘q");
+    if (DB.profiles[0].points < need[p.p_outfit]) throw new Error("Bu kiyim hali ochilmagan");
+    timoOutfit = p.p_outfit;
+    return p.p_outfit;
+  },
+  my_wallet: () => {
+    const xp = DB.profiles[0].points;
+    const spent = DB.shop_orders.filter((o) => o.student_id === UID && o.status !== "rejected").reduce((a, o) => a + o.price, 0);
+    return [{ xp, earned: xp, spent, balance: xp - spent }];
+  },
+  buy_shop_item: (p) => {
+    const it = DB.shop_items.find((x) => x.id === p.p_item && x.active);
+    if (!it) throw new Error("Mahsulot topilmadi.");
+    if (it.stock !== null && it.stock <= 0) throw new Error("Mahsulot tugagan.");
+    const w = RPC.my_wallet({})[0];
+    if (w.balance < it.price) throw new Error("EcoCoin yetarli emas.");
+    if (it.stock !== null) it.stock -= 1;
+    const me = DB.profiles[0];
+    const id = nextId++;
+    DB.shop_orders.unshift({ id, item_id: it.id, item_title: it.title, student_id: UID, price: it.price, status: "pending", created_at: new Date().toISOString(), handled_at: null, profiles: { full_name: me.full_name, class_name: me.class_name } });
+    return id;
+  },
+  get_league: (p) => {
+    const m = String(p.p_month ?? "").slice(0, 7);
+    const cur = new Date().toISOString().slice(0, 7);
+    const k = m === cur ? 1 : 0.8 + (m.charCodeAt(6) % 5) / 10;
+    return [
+      { class_name: "8-B", students: 26, points: Math.round(980 * k), recycling_kg: 31 * k, challenges: Math.round(14 * k), research: 1 },
+      { class_name: "9-A", students: 28, points: Math.round(940 * k), recycling_kg: 27 * k, challenges: Math.round(12 * k), research: 2 },
+      { class_name: "10-A", students: 24, points: Math.round(720 * k), recycling_kg: 18 * k, challenges: Math.round(9 * k), research: 1 },
+      { class_name: "7-V", students: 30, points: Math.round(510 * k), recycling_kg: 12 * k, challenges: Math.round(6 * k), research: 0 },
+    ].map((r) => ({ ...r, per_student: Math.round((r.points / r.students) * 10) / 10 }));
+  },
+  get_fund_summary: () =>
+    DB.fund_projects.filter((f) => f.active).map((f) => ({
+      project_id: f.id,
+      title: f.title,
+      description: f.description,
+      votes: (FUND_VOTES[f.id] ?? 0) + (myVote === f.id ? 1 : 0),
+      mine: myVote === f.id,
+    })),
+  vote_fund_project: (p) => {
+    myVote = p.p_project;
+    return null;
+  },
+  admin_reset_fund_votes: () => {
+    myVote = null;
+    Object.keys(FUND_VOTES).forEach((k) => (FUND_VOTES[Number(k)] = 0));
+    return null;
+  },
+  get_goal_auto: () => [{ active_pct: 46, classes_pct: 75, paper_kg: 142.5, plastic_kg: 63.2, research: DB.eco_research.filter((r) => r.status === "published").length }],
   admin_set_password: () => null,
   get_school_overall_impact: () => [
     { paper_kg: 142.5, plastic_kg: 63.2, recycling_kg: 205.7, recycling_points: 5140, approved_challenges: 87, challenge_points: 2310, total_points: 7450, active_students: 126 },
@@ -238,8 +385,12 @@ class Query {
 
     if (this.op === "insert") {
       const items = (Array.isArray(this.payload) ? this.payload : [this.payload]).map((p: any) => {
-        const base: any = ["challenges", "eco_events", "mentors"].includes(this.table)
-          ? { created_at: new Date().toISOString() }
+        const base: any = ["challenges", "eco_events", "mentors", "shop_items", "recycling_batches", "fund_projects", "committee_members", "committee_meetings"].includes(this.table)
+          ? { created_at: new Date().toISOString(), ...(this.table === "recycling_batches" ? { stage: 1, income: 0, history: [] } : {}), ...(this.table === "fund_projects" || this.table === "shop_items" ? { active: true } : {}) }
+          : this.table === "action_tasks"
+          ? { status: "todo" }
+          : this.table === "volunteer_logs"
+          ? { submitted_at: new Date().toISOString(), status: "pending", awarded_points: 0, approved_hours: null, reviewer_feedback: null, student_id: UID, profiles: { full_name: DB.profiles[0].full_name } }
           : { submitted_at: new Date().toISOString(), status: "pending", awarded_points: 0 };
         const row: any = { id: nextId++, ...base, ...p };
         const me = DB.profiles[0];
@@ -297,6 +448,13 @@ class Query {
   }
 }
 export function createDemoClient(): any {
+  // Faqat demo: localStorage "eco-demo-role" = "volunteer" | "student" bilan boshqa rolni sinab ko'rish
+  try {
+    const r = localStorage.getItem("eco-demo-role");
+    if (r) DB.profiles[0].role = r;
+  } catch {
+    /* e’tiborsiz */
+  }
   return {
     auth: {
       async getUser() {

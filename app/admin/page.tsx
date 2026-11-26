@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import timoImg from "@/public/timo.png";
+import timoImg from "@/public/timo.webp";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
@@ -35,7 +35,7 @@ type FeedItem = {
 
 const KIND = {
   challenge: { icon: "🎯", tint: "from-leaf-300 to-leaf-500", label: "Challenge" },
-  recycling: { icon: "♻️", tint: "from-sand-400 to-sand-500", label: "Recycling" },
+  recycling: { icon: "♻️", tint: "from-[#e2a63a] to-[#c98a17]", label: "Recycling" },
   research: { icon: "📚", tint: "from-[#8cc2ec] to-sky-500", label: "Tadqiqot" },
 };
 
@@ -271,19 +271,19 @@ export default function AdminDashboard() {
                   {q.icon}
                 </span>
                 <div className="relative flex items-center justify-between">
-                  <span className="bounce-target grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-2xl backdrop-blur">{q.icon}</span>
+                  <span className="bounce-target grid h-12 w-12 place-items-center rounded-2xl bg-ink/20 text-2xl backdrop-blur">{q.icon}</span>
                   {q.count > 0 ? (
                     <span className="chip bg-surface text-coral-500">
                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" /> Yangi
                     </span>
                   ) : (
-                    <span className="chip bg-white/20 text-white">✓ Toza</span>
+                    <span className="chip bg-ink/20 text-white">✓ Toza</span>
                   )}
                 </div>
                 <p className="relative mt-6 font-display text-6xl font-semibold leading-none">{q.count}</p>
                 <p className="relative mt-2 text-lg font-extrabold">{q.title}</p>
                 <p className="relative text-sm text-white/70">{q.text}</p>
-                <span className="relative mt-5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-sm font-extrabold backdrop-blur transition group-hover:bg-white/25">
+                <span className="relative mt-5 inline-flex items-center gap-1.5 rounded-full bg-ink/15 px-4 py-2 text-sm font-extrabold backdrop-blur transition group-hover:bg-ink/25">
                   {q.count > 0 ? "Ko‘rib chiqish" : "Ochish"} <span className="transition-transform group-hover:translate-x-1">→</span>
                 </span>
               </Link>

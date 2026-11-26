@@ -171,7 +171,7 @@ export default function CalendarPage() {
                                 <span
                                   key={e.id}
                                   className={`block truncate rounded-md px-1.5 py-0.5 text-left text-[10px] font-bold ${
-                                    isSelected ? "bg-white/20 text-white" : EVENT_TYPES[e.event_type].chip
+                                    isSelected ? "bg-ink/20 text-white" : EVENT_TYPES[e.event_type].chip
                                   }`}
                                 >
                                   {e.title}

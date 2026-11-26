@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import timoImg from "@/public/timo.png";
+import { NavIcon } from "@/components/NavIcon";
+import { Bell, Menu } from "lucide-react";
+import timoImg from "@/public/timo.webp";
 import Link from "next/link";
 import { useAppPathname } from "@/lib/nav";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
@@ -11,11 +13,12 @@ import { initials, useSession } from "@/lib/session";
 import { Logo } from "@/components/brand";
 import { Skeleton } from "@/components/ui";
 import Portal from "@/components/Portal";
+import EffectsToggle from "@/components/EffectsToggle";
 
-type Counts = { challenges: number; recycling: number; research: number };
+type Counts = { challenges: number; recycling: number; research: number; shop: number; volunteers: number };
 
 const AdminContext = createContext<{ counts: Counts; refreshCounts: () => Promise<void> }>({
-  counts: { challenges: 0, recycling: 0, research: 0 },
+  counts: { challenges: 0, recycling: 0, research: 0, shop: 0, volunteers: 0 },
   refreshCounts: async () => {},
 });
 
@@ -26,7 +29,12 @@ const NAV = [
   { href: "/admin", label: "Boshqaruv paneli", icon: "📊", key: null, group: null, mentor: true },
   { href: "/admin/challenges", label: "Challenge topshiriqlari", icon: "🎯", key: "challenges", group: "Tekshiruv", mentor: true },
   { href: "/admin/research", label: "Tadqiqotlar", icon: "📚", key: "research", group: null, mentor: true },
+  { href: "/admin/volunteers", label: "Volontyor ishlari", icon: "🤝", key: "volunteers", group: null, mentor: false },
   { href: "/admin/recycling", label: "Recycling kiritish", icon: "♻️", key: "recycling", group: "Kiritish", mentor: true },
+  { href: "/admin/batches", label: "Partiyalar va Eco Fund", icon: "🚚", key: null, group: null, mentor: false },
+  { href: "/admin/shop", label: "EcoShop buyurtmalar", icon: "🛍️", key: "shop", group: null, mentor: false },
+  { href: "/admin/greenflag", label: "Green Flag", icon: "🏳️", key: null, group: "Green Flag", mentor: false },
+  { href: "/admin/report", label: "Hisobot (PDF)", icon: "📄", key: null, group: null, mentor: false },
   { href: "/admin/challenge-list", label: "Challenge ro‘yxati", icon: "📝", key: null, group: "Sayt", mentor: false },
   { href: "/admin/events", label: "Tadbirlar", icon: "📅", key: null, group: null, mentor: false },
   { href: "/admin/mentors", label: "Mentorlar", icon: "🎓", key: null, group: null, mentor: false },
@@ -39,7 +47,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   const pathname = useAppPathname();
   const { user, profile, isAdmin, isStaff, isOwner, loading } = useSession();
   const [supabase] = useState(() => createClient());
-  const [counts, setCounts] = useState<Counts>({ challenges: 0, recycling: 0, research: 0 });
+  const [counts, setCounts] = useState<Counts>({ challenges: 0, recycling: 0, research: 0, shop: 0, volunteers: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
 
   const refreshCounts = useCallback(async () => {
@@ -47,9 +55,15 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       supabase.from(table).select("id", { count: "exact", head: true }).eq("status", "pending");
     let recyclingQuery = pending("recycling_submissions");
     if (profile?.school_id) recyclingQuery = recyclingQuery.eq("school_id", profile.school_id);
-    const [c, r, t] = await Promise.all([pending("challenge_submissions"), recyclingQuery, pending("eco_research")]);
-    setCounts({ challenges: c.count ?? 0, recycling: r.count ?? 0, research: t.count ?? 0 });
-  }, [supabase, profile?.school_id]);
+    const [c, r, t, o, v] = await Promise.all([
+      pending("challenge_submissions"),
+      recyclingQuery,
+      pending("eco_research"),
+      isAdmin ? pending("shop_orders") : Promise.resolve({ count: 0 }),
+      isAdmin ? pending("volunteer_logs") : Promise.resolve({ count: 0 }),
+    ]);
+    setCounts({ challenges: c.count ?? 0, recycling: r.count ?? 0, research: t.count ?? 0, shop: o.count ?? 0, volunteers: v.count ?? 0 });
+  }, [supabase, profile?.school_id, isAdmin]);
 
   useEffect(() => {
     if (isStaff) refreshCounts();
@@ -88,7 +102,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const total = counts.challenges + counts.recycling + counts.research;
+  const total = counts.challenges + counts.recycling + counts.research + counts.volunteers;
   const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
   const nav = NAV.filter((item) => isAdmin || item.mentor);
   const roleLabel = isOwner ? "Bosh admin" : isAdmin ? "Administrator" : "Tekshiruvchi";
@@ -123,22 +137,22 @@ export default function AdminShell({ children }: { children: ReactNode }) {
               href={item.href}
               className={`group relative flex items-center gap-3 overflow-hidden rounded-2xl px-3 py-2.5 text-sm font-bold transition-all duration-300 ${
                 active
-                  ? "bg-gradient-to-r from-leaf-400 to-leaf-300 text-forest-950 shadow-[0_10px_30px_-10px_rgb(155_210_77/0.7)]"
-                  : "text-white/70 hover:translate-x-1 hover:bg-white/[0.08] hover:text-white"
+                  ? "bg-white text-[#12302a] shadow-sm"
+                  : "text-white/70 hover:bg-white/[0.07] hover:text-white"
               }`}
             >
               <span
-                className={`grid h-9 w-9 place-items-center rounded-xl text-base transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 ${
-                  active ? "bg-white/[0.06]" : "bg-white/[0.08]"
+                className={`grid h-9 w-9 place-items-center rounded-xl ${
+                  active ? "bg-[#e3f1e8] text-[#1f7a45]" : "bg-white/[0.07]"
                 }`}
               >
-                {item.icon}
+                <NavIcon href={item.href} className="h-[18px] w-[18px]" />
               </span>
               <span className="flex-1">{item.label}</span>
               {count > 0 && (
                 <span
                   className={`min-w-6 rounded-full px-2 py-0.5 text-center text-[11px] font-black ${
-                    active ? "bg-forest-900 text-leaf-300" : "bg-coral-500 text-white shadow-[0_0_12px_rgb(217_87_59/0.6)]"
+                    active ? "bg-[#12302a] text-white" : "bg-[#e5533a] text-white"
                   }`}
                 >
                   {count}
@@ -152,8 +166,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
 
       <div className="mt-auto space-y-3 pt-6">
         {/* Timo yordamchi kartasi */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-forest-600 to-forest-800 p-4 pr-24 ring-1 ring-white/10">
-          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-leaf-400/30 blur-2xl" />
+        <div className="relative overflow-hidden rounded-2xl bg-white/[0.06] p-4 pr-24 ring-1 ring-white/10">
           <p className="relative text-sm font-extrabold text-white">
             {total > 0 ? `${total} ta ish kutmoqda` : "Hammasi joyida!"}
           </p>
@@ -187,21 +200,20 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   );
 
   const asideClass =
-    "overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:rgb(255_255_255/0.18)_transparent] bg-[radial-gradient(120%_60%_at_0%_0%,#27744b_0%,transparent_60%),linear-gradient(180deg,#133a26_0%,#0e2a1c_100%)] p-5";
+    "overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:rgb(255_255_255/0.18)_transparent] bg-[linear-gradient(180deg,#16352f_0%,#0e231f_100%)] p-5";
   const current = NAV.find((n) => isActive(n.href));
 
   return (
     <AdminContext.Provider value={{ counts, refreshCounts }}>
       <div className="flex min-h-screen bg-cream">
         <aside className={`fixed inset-y-0 left-0 z-40 hidden w-72 lg:block ${asideClass}`}>
-          <div className="pointer-events-none absolute inset-0 leaf-pattern opacity-[0.08]" />
           {sidebar}
         </aside>
 
         {menuOpen && (
           <Portal>
           <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="absolute inset-0 bg-forest-950/60 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
+            <div className="absolute inset-0 bg-[#0c1f1b]/40" onClick={() => setMenuOpen(false)} />
             <aside className={`absolute inset-y-0 left-0 w-72 animate-rise ${asideClass}`}>{sidebar}</aside>
           </div>
           </Portal>
@@ -209,18 +221,14 @@ export default function AdminShell({ children }: { children: ReactNode }) {
 
         <div className="relative flex min-w-0 flex-1 flex-col lg:pl-72">
           {/* Fon bezaklari */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="blob absolute -right-40 -top-40 h-[28rem] w-[28rem] bg-leaf-200/50 blur-3xl" />
-            <div className="blob absolute -left-20 top-[40%] h-80 w-80 bg-sand-200/50 blur-3xl [animation-delay:-6s]" />
-          </div>
 
-          <header className="sticky top-0 z-30 flex h-[68px] items-center gap-3 border-b border-white/60 bg-cream/75 px-4 backdrop-blur-xl sm:px-8">
+          <header className="sticky top-0 z-30 flex h-[68px] items-center gap-3 border-b border-line bg-white/85 px-4 backdrop-blur-xl sm:px-8">
             <button
               onClick={() => setMenuOpen(true)}
               className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-surface shadow-sm lg:hidden"
               aria-label="Menyu"
             >
-              ☰
+              <Menu className="h-5 w-5" strokeWidth={1.8} />
             </button>
             <div className="hidden items-center gap-2 text-sm font-bold text-muted sm:flex">
               <span>{roleLabel}</span>
@@ -228,6 +236,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
               <span className="text-ink">{current?.label ?? "Panel"}</span>
             </div>
             <div className="ml-auto flex items-center gap-2">
+              <EffectsToggle />
               <span
                 className={`hidden items-center gap-2 rounded-full px-3.5 py-2 text-xs font-extrabold sm:flex ${
                   total > 0 ? "bg-coral-100 text-coral-500" : "bg-leaf-100 text-accent"
@@ -247,14 +256,14 @@ export default function AdminShell({ children }: { children: ReactNode }) {
                 className="relative grid h-10 w-10 place-items-center rounded-xl border border-line bg-surface text-lg shadow-sm transition hover:-translate-y-0.5"
                 aria-label="Bildirishnomalar"
               >
-                🔔
+                <Bell className="h-[18px] w-[18px] text-ink/70" strokeWidth={1.8} />
                 {total > 0 && (
                   <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-coral-500 px-1 text-[10px] font-black text-white ring-2 ring-cream">
                     {total}
                   </span>
                 )}
               </Link>
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-forest-600 to-forest-800 text-xs font-black text-leaf-300 shadow-sm">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#16352f] text-xs font-bold text-white shadow-sm">
                 {initials(profile?.full_name)}
               </span>
             </div>
@@ -289,13 +298,11 @@ export function AdminTitle({
   icon?: string;
 }) {
   return (
-    <div className="relative mb-7 overflow-hidden rounded-[2rem] bg-gradient-to-br from-forest-700 via-forest-800 to-forest-900 p-6 text-white shadow-[var(--shadow-lift)] sm:p-8">
-      <div className="absolute inset-0 leaf-pattern opacity-10" />
-      <div className="blob absolute -right-16 -top-20 h-64 w-64 bg-leaf-400/25 blur-2xl" />
+    <div className="relative mb-7 overflow-hidden rounded-[18px] bg-gradient-to-br from-[#16352f] to-[#0f2520] p-6 text-white shadow-[var(--shadow-lift)] sm:p-8">
       <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           {icon && (
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/10 text-3xl ring-1 ring-white/15 backdrop-blur animate-float">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/10 text-3xl ring-1 ring-white/15">
               {icon}
             </span>
           )}

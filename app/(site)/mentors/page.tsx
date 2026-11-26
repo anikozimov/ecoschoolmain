@@ -11,7 +11,7 @@ import { Alert, EmptyState, PageHero, Skeleton } from "@/components/ui";
 
 const TINTS = [
   "from-leaf-300 to-forest-500",
-  "from-sand-400 to-[#b9802a]",
+  "from-[#e2a63a] to-[#b9802a]",
   "from-sky-300 to-[#2b6aa3]",
   "from-coral-500/80 to-forest-700",
 ];

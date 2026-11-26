@@ -96,12 +96,12 @@ export default function ImpactPage() {
                 <div className="rounded-[1.5rem] bg-white/[0.07] p-5 ring-1 ring-white/10">
                   <p className="text-sm font-bold text-white/70">Tarkibi</p>
                   <div className="mt-3 flex h-4 overflow-hidden rounded-full bg-white/10">
-                    <div className="bg-sand-400 transition-all duration-700" style={{ width: `${paperShare}%` }} />
+                    <div className="bg-[#e9b949] transition-all duration-700" style={{ width: `${paperShare}%` }} />
                     <div className="bg-sky-500 transition-all duration-700" style={{ width: `${100 - paperShare}%` }} />
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="flex items-center gap-2 text-white/65"><span className="h-2.5 w-2.5 rounded-full bg-sand-400" /> Qog‘oz</p>
+                      <p className="flex items-center gap-2 text-white/65"><span className="h-2.5 w-2.5 rounded-full bg-[#e9b949]" /> Qog‘oz</p>
                       <p className="mt-1 font-display text-2xl font-semibold">{formatNumber(impact.paper_kg, 1)} kg</p>
                     </div>
                     <div>

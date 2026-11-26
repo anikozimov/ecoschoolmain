@@ -182,7 +182,7 @@ export default function AdminSchoolsPage() {
           <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-6 text-muted">
             <li>Supabase → <b className="text-ink">SQL Editor</b> → <b className="text-ink">New query</b>.</li>
             <li>
-              Loyihadagi <code className="rounded bg-white/10 px-1.5 text-accent">{MIGRATION_FILE}</code> faylini to‘liq nusxalab qo‘ying va{" "}
+              Loyihadagi <code className="rounded bg-ink/10 px-1.5 text-accent">{MIGRATION_FILE}</code> faylini to‘liq nusxalab qo‘ying va{" "}
               <b className="text-ink">Run</b> bosing.
             </li>
             <li>Pastda “✓ Tayyor” yozuvi chiqadi. Keyin shu sahifani yangilang.</li>
@@ -236,13 +236,13 @@ export default function AdminSchoolsPage() {
                 <button
                   key={s.id}
                   onClick={() => setSelected(s.id)}
-                  className={`card w-full p-4 text-left transition ${active ? "ring-2 ring-leaf-400" : "hover:bg-white/[0.06]"}`}
+                  className={`card w-full p-4 text-left transition ${active ? "ring-2 ring-leaf-400" : "hover:bg-ink/[0.06]"}`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl ${active ? "bg-glow" : "bg-white/[0.06]"}`}>🏫</span>
+                    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl ${active ? "bg-glow" : "bg-ink/[0.06]"}`}>🏫</span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-extrabold">{s.name}</span>
-                      <span className="mt-0.5 inline-block rounded-md bg-white/[0.08] px-1.5 py-0.5 font-mono text-xs font-bold text-accent">{s.code}</span>
+                      <span className="mt-0.5 inline-block rounded-md bg-ink/[0.08] px-1.5 py-0.5 font-mono text-xs font-bold text-accent">{s.code}</span>
                     </span>
                   </div>
                   <div className="mt-3 flex gap-4 text-xs font-bold text-muted">
@@ -299,20 +299,20 @@ export default function AdminSchoolsPage() {
                 {classesLoading ? (
                   <Skeleton className="h-32" />
                 ) : classes.length === 0 ? (
-                  <p className="rounded-2xl bg-white/[0.04] p-6 text-center text-sm text-muted">
+                  <p className="rounded-2xl bg-ink/[0.04] p-6 text-center text-sm text-muted">
                     Hali sinf yo‘q. Yuqoridan qo‘shing — o‘quvchilar ro‘yxatdan o‘tishda shu sinflardan tanlaydi.
                   </p>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
                     {classes.map((c) => (
-                      <div key={c.id} className="group flex items-center gap-2 rounded-2xl border border-line bg-white/[0.04] p-3">
+                      <div key={c.id} className="group flex items-center gap-2 rounded-2xl border border-line bg-ink/[0.04] p-3">
                         <span className="min-w-0 flex-1">
                           <span className="block font-display text-xl font-semibold">{c.class_name}</span>
                           <span className="text-xs text-muted">{c.students} o‘quvchi</span>
                         </span>
                         <button
                           onClick={() => { setRenaming(c); setRenameValue(c.class_name); }}
-                          className="grid h-8 w-8 place-items-center rounded-lg text-sm text-muted hover:bg-white/10 hover:text-accent"
+                          className="grid h-8 w-8 place-items-center rounded-lg text-sm text-muted hover:bg-ink/10 hover:text-accent"
                           aria-label={`${c.class_name} nomini o‘zgartirish`}
                         >
                           ✏️

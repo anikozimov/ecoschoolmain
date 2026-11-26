@@ -10,6 +10,8 @@ import { hashPath, navigate } from "@/lib/nav";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BottomDock from "@/components/BottomDock";
+import TimoBuddy from "@/components/timo/TimoBuddy";
+import TimoPage from "@/app/(site)/timo/page";
 import { ScrollProgress } from "@/components/effects";
 import AdminShell from "@/components/admin/AdminShell";
 
@@ -23,6 +25,12 @@ import Impact from "@/app/(site)/impact/page";
 import Calendar from "@/app/(site)/calendar/page";
 import Mentors from "@/app/(site)/mentors/page";
 import Profile from "@/app/(site)/profile/page";
+import Shop from "@/app/(site)/shop/page";
+import League from "@/app/(site)/league/page";
+import GreenFlag from "@/app/(site)/green-flag/page";
+import Certificate from "@/app/(site)/certificate/page";
+import Game from "@/app/(site)/game/page";
+import Volunteer from "@/app/(site)/volunteer/page";
 import Login from "@/app/login/page";
 import AdminHome from "@/app/admin/page";
 import AdminChallenges from "@/app/admin/challenges/page";
@@ -34,6 +42,11 @@ import AdminChallengeList from "@/app/admin/challenge-list/page";
 import AdminStudents from "@/app/admin/students/page";
 import AdminContent from "@/app/admin/content/page";
 import AdminSchools from "@/app/admin/schools/page";
+import AdminShop from "@/app/admin/shop/page";
+import AdminBatches from "@/app/admin/batches/page";
+import AdminGreenFlag from "@/app/admin/greenflag/page";
+import AdminReport from "@/app/admin/report/page";
+import AdminVolunteers from "@/app/admin/volunteers/page";
 
 const SITE: Record<string, ComponentType> = {
   "/": Home,
@@ -46,6 +59,13 @@ const SITE: Record<string, ComponentType> = {
   "/calendar": Calendar,
   "/mentors": Mentors,
   "/profile": Profile,
+  "/shop": Shop,
+  "/league": League,
+  "/green-flag": GreenFlag,
+  "/certificate": Certificate,
+  "/timo": TimoPage,
+  "/game": Game,
+  "/volunteer": Volunteer,
 };
 const ADMIN: Record<string, ComponentType> = {
   "/admin": AdminHome,
@@ -59,6 +79,11 @@ const ADMIN: Record<string, ComponentType> = {
   "/admin/students": AdminStudents,
   "/admin/content": AdminContent,
   "/admin/schools": AdminSchools,
+  "/admin/shop": AdminShop,
+  "/admin/batches": AdminBatches,
+  "/admin/greenflag": AdminGreenFlag,
+  "/admin/report": AdminReport,
+  "/admin/volunteers": AdminVolunteers,
 };
 
 export default function DemoApp() {
@@ -113,6 +138,7 @@ export default function DemoApp() {
       </main>
       <SiteFooter />
       <BottomDock />
+      <TimoBuddy />
     </>
   );
 }

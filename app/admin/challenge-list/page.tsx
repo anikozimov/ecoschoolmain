@@ -164,7 +164,7 @@ export default function AdminChallengeListPage() {
               {CATEGORIES.map((cat) => (
                 <button type="button" key={cat} onClick={() => setForm({ ...form, category: cat })}
                   className={`rounded-xl border px-3 py-2 text-sm font-bold transition ${
-                    form.category === cat ? "border-leaf-400 bg-leaf-200 text-accent" : "border-line hover:bg-white/[0.05]"
+                    form.category === cat ? "border-leaf-400 bg-leaf-200 text-accent" : "border-line hover:bg-ink/[0.05]"
                   }`}>
                   {cat}
                 </button>

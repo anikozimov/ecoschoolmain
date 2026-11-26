@@ -6,7 +6,9 @@ import type { MouseEvent } from "react";
 import { useAppPathname } from "@/lib/nav";
 import { useSession } from "@/lib/session";
 import { NAV, TELEGRAM_URL } from "./brand";
+import { NavIcon } from "./NavIcon";
 import Portal from "./Portal";
+import EffectsToggle from "./EffectsToggle";
 
 /**
  * Pastki suzuvchi menyu (ilovalardagidek).
@@ -15,7 +17,7 @@ import Portal from "./Portal";
  *  - Faol bo'lim ostida sirpanuvchi yorug' belgi, bosilganda to'lqin
  */
 const HOME = { href: "/", label: "Bosh sahifa", short: "Bosh", icon: "🏠" };
-const MOBILE_MAIN = ["/challenges", "/recycling", "/leaderboard"];
+const MOBILE_MAIN = ["/challenges", "/timo", "/leaderboard"];
 const SHORT: Record<string, string> = {
   "/challenges": "Challenge",
   "/recycling": "Recycling",
@@ -24,6 +26,12 @@ const SHORT: Record<string, string> = {
   "/impact": "Natijalar",
   "/calendar": "Taqvim",
   "/mentors": "Mentorlar",
+  "/league": "Liga",
+  "/shop": "Do‘kon",
+  "/green-flag": "Green Flag",
+  "/game": "O‘yin",
+  "/timo": "Timo",
+  "/volunteer": "Volontyor",
 };
 
 function shortLabel(href: string, label: string) {
@@ -134,8 +142,8 @@ export default function BottomDock() {
                 aria-current={active ? "page" : undefined}
                 className="dock-item group relative flex flex-col items-center gap-0.5 rounded-2xl px-3 pb-1.5 pt-2"
               >
-                <span className="dock-icon text-[1.35rem] leading-none">{item.icon}</span>
-                <span className={`whitespace-nowrap text-[11px] font-extrabold ${active ? "text-forest-950" : "text-ink/70 group-hover:text-ink"}`}>
+                <span className="dock-icon leading-none"><NavIcon href={item.href} className="h-[21px] w-[21px]" /></span>
+                <span className={`whitespace-nowrap text-[11px] font-semibold ${active ? "text-white" : "text-ink/70 group-hover:text-ink"}`}>
                   {shortLabel(item.href, item.label)}
                 </span>
                 <span className="dock-tip">{item.label}</span>
@@ -144,10 +152,10 @@ export default function BottomDock() {
           })}
           {isStaff && (
             <>
-              <span className="mx-1 mb-2 h-8 w-px self-center bg-white/15" aria-hidden />
+              <span className="mx-1 mb-2 h-8 w-px self-center bg-ink/15" aria-hidden />
               <Link href="/admin" onClick={ripple} className="dock-item group relative flex flex-col items-center gap-0.5 rounded-2xl px-3 pb-1.5 pt-2">
-                <span className="dock-icon text-[1.35rem] leading-none">⚙️</span>
-                <span className="text-[11px] font-extrabold text-leaf-300">{isAdmin ? "Admin" : "Panel"}</span>
+                <span className="dock-icon leading-none text-accent"><NavIcon href="admin" className="h-[21px] w-[21px]" /></span>
+                <span className="text-[11px] font-semibold text-accent">{isAdmin ? "Admin" : "Panel"}</span>
               </Link>
             </>
           )}
@@ -174,8 +182,8 @@ export default function BottomDock() {
                 aria-current={active ? "page" : undefined}
                 className="tab-item relative flex flex-col items-center gap-0.5 overflow-hidden rounded-2xl py-2"
               >
-                <span className="tab-icon text-[1.4rem] leading-none">{item.icon}</span>
-                <span className={`text-[10.5px] font-extrabold ${active ? "text-forest-950" : "text-ink/65"}`}>
+                <span className={`tab-icon leading-none ${active ? "text-white" : "text-ink/75"}`}><NavIcon href={item.href} className="h-[22px] w-[22px]" /></span>
+                <span className={`text-[10.5px] font-semibold ${active ? "text-white" : "text-ink/65"}`}>
                   {shortLabel(item.href, item.label)}
                 </span>
               </Link>
@@ -192,13 +200,13 @@ export default function BottomDock() {
             aria-label="Boshqa bo‘limlar"
             className="tab-item relative flex flex-col items-center gap-0.5 overflow-hidden rounded-2xl py-2"
           >
-            <span className={`tab-icon grid h-[1.4rem] place-items-center transition-transform duration-300 ${more ? "rotate-45" : ""}`}>
+            <span className={`tab-icon grid h-[22px] place-items-center transition-transform duration-300 ${moreActive && !more ? "text-white" : "text-ink/75"} ${more ? "rotate-45" : ""}`}>
               <span className="relative block h-4 w-4">
                 <span className="absolute left-0 top-[7px] h-0.5 w-4 rounded bg-current" />
                 <span className="absolute left-[7px] top-0 h-4 w-0.5 rounded bg-current" />
               </span>
             </span>
-            <span className={`text-[10.5px] font-extrabold ${moreActive && !more ? "text-forest-950" : "text-ink/65"}`}>Ko‘proq</span>
+            <span className={`text-[10.5px] font-semibold ${moreActive && !more ? "text-white" : "text-ink/65"}`}>Ko‘proq</span>
           </button>
         </div>
       </nav>
@@ -207,7 +215,7 @@ export default function BottomDock() {
       {more && (
         <Portal>
           <div className="fixed inset-0 z-[45] lg:hidden" onClick={() => setMore(false)}>
-            <div className="absolute inset-0 bg-forest-950/60 animate-[fade-in_0.25s_ease]" />
+            <div className="absolute inset-0 bg-[#0c1f1b]/35 animate-[fade-in_0.25s_ease]" />
             <div
               className="sheet absolute inset-x-3 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+5.25rem)] rounded-[1.75rem] p-4"
               onClick={(e) => e.stopPropagation()}
@@ -224,11 +232,11 @@ export default function BottomDock() {
                       onClick={ripple}
                       style={{ animationDelay: `${i * 35}ms` }}
                       className={`sheet-item relative flex flex-col items-center gap-1.5 overflow-hidden rounded-2xl px-2 py-3.5 text-center ${
-                        active ? "bg-glow text-forest-950" : "bg-white/[0.05] ring-1 ring-white/10"
+                        active ? "bg-accent text-white" : "bg-cream ring-1 ring-line"
                       }`}
                     >
-                      <span className="text-2xl">{item.icon}</span>
-                      <span className="text-xs font-extrabold leading-tight">{SHORT[item.href] ?? item.label}</span>
+                      <NavIcon href={item.href} className="h-6 w-6" />
+                      <span className="text-xs font-semibold leading-tight">{SHORT[item.href] ?? item.label}</span>
                     </Link>
                   );
                 })}
@@ -237,15 +245,16 @@ export default function BottomDock() {
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ animationDelay: `${(mobileRest.length + 1) * 35}ms` }}
-                  className="sheet-item flex flex-col items-center gap-1.5 rounded-2xl bg-white/[0.05] px-2 py-3.5 text-center ring-1 ring-white/10"
+                  className="sheet-item flex flex-col items-center gap-1.5 rounded-2xl bg-cream px-2 py-3.5 text-center ring-1 ring-line"
                 >
-                  <span className="text-2xl">✈️</span>
-                  <span className="text-xs font-extrabold">Telegram</span>
+                  <NavIcon href="telegram" className="h-6 w-6" />
+                  <span className="text-xs font-semibold">Telegram</span>
                 </a>
               </div>
+              <EffectsToggle variant="row" className="mt-3" />
               {isStaff && (
                 <Link href="/admin" className="btn btn-lime mt-3 w-full">
-                  ⚙️ {isAdmin ? "Admin panel" : "Tekshiruv paneli"}
+                  <NavIcon href="admin" className="h-4 w-4" /> {isAdmin ? "Admin panel" : "Tekshiruv paneli"}
                 </Link>
               )}
             </div>

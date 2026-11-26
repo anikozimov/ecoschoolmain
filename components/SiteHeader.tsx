@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { initials, useSession } from "@/lib/session";
 import { Logo } from "./brand";
+import EffectsToggle from "./EffectsToggle";
 
 export default function SiteHeader() {
   const { user, profile, loading } = useSession();
@@ -28,6 +29,7 @@ export default function SiteHeader() {
         </Link>
 
         <div className="flex items-center gap-2">
+          <EffectsToggle />
           {loading ? (
             <span className="h-10 w-24 animate-pulse rounded-full bg-line/70" />
           ) : user ? (
@@ -38,7 +40,7 @@ export default function SiteHeader() {
               <span className="grid h-8 w-8 place-items-center rounded-full bg-leaf-300 text-xs font-black text-forest-950">
                 {initials(profile?.full_name)}
               </span>
-              <span>{profile?.points ?? 0} ball</span>
+              <span className="whitespace-nowrap">{profile?.points ?? 0} ball</span>
             </Link>
           ) : (
             <Link href="/login" className="btn btn-primary btn-sm">

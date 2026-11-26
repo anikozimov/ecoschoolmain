@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource-variable/fraunces";
-import "@fontsource-variable/nunito";
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/onest";
 import "./globals.css";
 import { SessionProvider } from "@/lib/session";
 import Ambient from "@/components/Ambient";
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
   description:
     "ECO SCHOOL — maktab o‘quvchilari uchun ekologik platforma: challenge'lar, recycling, tadqiqotlar, reyting va eko-taqvim.",
   icons: {
-    icon: [{ url: "/eco-icon.svg", type: "image/svg+xml" }],
-    apple: "/eco-apple-icon.png",
+    icon: [{ url: "/eco-logo.svg", type: "image/svg+xml" }, { url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: "/eco-logo-apple.png",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#040e09",
+  themeColor: "#060f14",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
